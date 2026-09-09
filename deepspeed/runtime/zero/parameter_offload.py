@@ -10,6 +10,7 @@ from deepspeed.utils import z3_leaf_module, set_z3_leaf_module
 from deepspeed.runtime.utils import see_memory_usage
 from deepspeed.runtime.zero.utils import apply_to_tensors_only, is_zero_param
 from deepspeed.runtime.zero.offload_config import OffloadDeviceEnum
+from deepspeed.runtime.zero.config import DeepSpeedZeroConfig
 from deepspeed.runtime.zero.partition_parameters import _init_external_params
 from deepspeed.runtime.zero.partition_parameters import *
 from deepspeed.runtime.zero.partitioned_param_coordinator import PartitionedParameterCoordinator, InflightParamRegistry, iter_params
@@ -187,10 +188,12 @@ class DeepSpeedZeRoOffload(object):
         self._max_reuse_distance_in_numel = int(max_reuse_distance)
         self._max_available_parameters_in_numel = int(max_live_parameters)
 
-        zero_cfg = getattr(ds_config, 'zero_config', None)
-        self._adaptive_prefetch = getattr(zero_cfg, 'adaptive_prefetch_bucket_size', False)
-        self._adaptive_prefetch_min_sz = int(getattr(zero_cfg, 'adaptive_prefetch_min_size', 10_000_000))
-        self._adaptive_prefetch_max_sz = int(getattr(zero_cfg, 'adaptive_prefetch_max_size', 500_000_000))
+        # The engine passes the raw config dict or path, not a DeepSpeedConfig object.
+        zero_cfg = deepspeed.runtime.config.DeepSpeedConfig(ds_config, mpu).zero_config \
+            if ds_config is not None else DeepSpeedZeroConfig()
+        self._adaptive_prefetch = zero_cfg.adaptive_prefetch_bucket_size
+        self._adaptive_prefetch_min_sz = zero_cfg.adaptive_prefetch_min_size
+        self._adaptive_prefetch_max_sz = zero_cfg.adaptive_prefetch_max_size
         self.__allgather_stream = None if get_accelerator().is_synchronized_device() else get_accelerator().Stream(
         ) if overlap_comm else get_accelerator().default_stream()
 
@@ -223,6 +226,7 @@ class DeepSpeedZeRoOffload(object):
             adaptive_prefetch=self._adaptive_prefetch,
             adaptive_prefetch_min_sz=self._adaptive_prefetch_min_sz,
             adaptive_prefetch_max_sz=self._adaptive_prefetch_max_sz,
+            dp_process_group=self.dp_process_group,
         )
 
         self.forward_hooks = []

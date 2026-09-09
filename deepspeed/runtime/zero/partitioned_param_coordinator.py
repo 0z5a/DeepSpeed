@@ -103,6 +103,7 @@ class PartitionedParameterCoordinator:
         adaptive_prefetch: bool = False,
         adaptive_prefetch_min_sz: int = 10_000_000,
         adaptive_prefetch_max_sz: int = 500_000_000,
+        dp_process_group=None,
     ) -> None:
         # mapping of param -> handle for each param that is currently in flight
         self.__inflight_param_registry = inflight_param_registry
@@ -127,20 +128,22 @@ class PartitionedParameterCoordinator:
         self.__prefetch_nvme: bool = prefetch_nvme
         self.hierarchy: int = 0
 
-        # Adaptive prefetch: adjusts __prefetch_bucket_sz based on measured
-        # fetch-wait time vs compute time using exponential moving averages.
         self.__adaptive_prefetch: bool = adaptive_prefetch
-        self.__adaptive_prefetch_min_sz: int = adaptive_prefetch_min_sz
-        self.__adaptive_prefetch_max_sz: int = adaptive_prefetch_max_sz
-        # EMA of wall-clock time spent waiting for in-flight fetches to complete
-        self.__fetch_wait_ema: float = 0.0
-        # EMA of wall-clock time between consecutive fetch_sub_module calls
-        # (approximates compute time per module)
-        self.__inter_step_ema: float = 0.0
-        self.__last_step_time: float = 0.0
-        self.__adaptive_step_count: int = 0
-        # Update the bucket size every this many steps to avoid thrashing
-        self.__adaptive_update_interval: int = 10
+        self.__adaptive_prefetch_group = dp_process_group
+        if adaptive_prefetch_min_sz < 0 or adaptive_prefetch_max_sz < adaptive_prefetch_min_sz:
+            raise ValueError("adaptive_prefetch_min_sz must be nonnegative and <= adaptive_prefetch_max_sz")
+        self.__adaptive_prefetch_max_sz = min(adaptive_prefetch_max_sz, max_available_parameters_in_numel)
+        self.__adaptive_prefetch_min_sz = min(adaptive_prefetch_min_sz, self.__adaptive_prefetch_max_sz)
+        if adaptive_prefetch:
+            self.__prefetch_bucket_sz = max(self.__adaptive_prefetch_min_sz,
+                                            min(self.__adaptive_prefetch_max_sz, prefetch_bucket_sz))
+        self.__adaptive_step_count = 0
+        self.__adaptive_update_interval = 10
+        self.__adaptive_sample_step = False
+        self.__adaptive_wait_ratio_ema = None
+        self.__adaptive_trace_invalidated = False
+        self.__adaptive_fetch_events = []
+        self.__adaptive_previous_fetch = None
         self.zero_quantized_weights = zero_quantized_weights
         self.zero_quantized_nontrainable_weights = zero_quantized_nontrainable_weights
 
@@ -211,60 +214,79 @@ class PartitionedParameterCoordinator:
             self.__release_param(param)
         self.__inflight_param_registry.clear()
 
-    def __update_adaptive_prefetch(self, wait_t0: float) -> None:
-        """Update EMAs and periodically resize the prefetch bucket.
+    def __adaptive_timestamp(self):
+        if get_accelerator().use_host_timers():
+            return time.perf_counter()
+        event = get_accelerator().Event(enable_timing=True)
+        event.record()
+        return event
 
-        wait_t0 is the perf_counter() timestamp taken just before entering the
-        per-param wait loop.  The elapsed time since then is the fetch-wait
-        cost for this step.  The elapsed time since the *previous* call is a
-        proxy for the module's compute time (it includes both compute and any
-        wait, so it slightly over-estimates pure compute; the ratio still
-        captures the trend).
-        """
-        now = time.perf_counter()
-        wait_time = now - wait_t0
+    def __record_adaptive_fetch(self, start, forward):
+        end = self.__adaptive_timestamp()
+        stream = get_accelerator().current_stream()
+        previous = self.__adaptive_previous_fetch
+        # A phase transition includes unrelated work (e.g. the loss or optimizer).
+        # Only compare consecutive fetches within the same forward/backward phase.
+        if previous is not None and previous[1] == forward and previous[2] == stream:
+            self.__adaptive_fetch_events.append((previous[0], start, end, forward))
+        self.__adaptive_previous_fetch = (end, forward, stream)
 
-        # Compute inter-step interval only after the first call.
-        if self.__last_step_time > 0.0:
-            inter_step = now - self.__last_step_time
-            alpha = 0.1  # EMA smoothing factor
-            self.__fetch_wait_ema = alpha * wait_time + (1 - alpha) * self.__fetch_wait_ema
-            self.__inter_step_ema = alpha * inter_step + (1 - alpha) * self.__inter_step_ema
-        self.__last_step_time = now
+    def __update_adaptive_prefetch(self) -> None:
+        """Resize at an iteration boundary, using the worst stall ratio across ranks."""
+        ratios = []
+        if self.is_complete_trace() and self.__adaptive_fetch_events:
+            host_timers = get_accelerator().use_host_timers()
+            waits = {True: 0.0, False: 0.0}
+            intervals = {True: 0.0, False: 0.0}
+            for previous, start, end, forward in self.__adaptive_fetch_events:
+                if host_timers:
+                    waits[forward] += end - start
+                    intervals[forward] += end - previous
+                else:
+                    # Autograd may use multiple compute streams. Wait for each
+                    # sample at this boundary, never inside a module fetch.
+                    end.synchronize()
+                    waits[forward] += start.elapsed_time(end)
+                    intervals[forward] += previous.elapsed_time(end)
+            ratios = [waits[phase] / intervals[phase] for phase in (True, False) if intervals[phase] > 0]
 
-        self.__adaptive_step_count += 1
-        if self.__adaptive_step_count % self.__adaptive_update_interval != 0:
+        # All ranks participate on the same cadence even if a trace was invalidated
+        # or a rank has no useful samples. A local early return could deadlock peers.
+        invalid = not ratios or self.__adaptive_trace_invalidated
+        stats = torch.tensor([float(invalid), max(ratios, default=0.0)],
+                             dtype=torch.float32,
+                             device=get_accelerator().current_device_name())
+        if dist.is_initialized():
+            dist.all_reduce(stats, op=dist.ReduceOp.MAX, group=self.__adaptive_prefetch_group)
+        invalid, wait_ratio = stats.tolist()
+        self.__adaptive_trace_invalidated = False
+        if invalid:
+            self.__adaptive_wait_ratio_ema = None
             return
 
-        if self.__inter_step_ema <= 0.0:
-            return
-
-        # Ratio of wait time to total step time.  A high ratio means the GPU is
-        # blocking waiting for prefetched data — increase the bucket.  A low
-        # ratio means we're fetching more than needed — shrink to save memory.
-        wait_ratio = self.__fetch_wait_ema / self.__inter_step_ema
+        if self.__adaptive_wait_ratio_ema is None:
+            self.__adaptive_wait_ratio_ema = wait_ratio
+        else:
+            self.__adaptive_wait_ratio_ema = 0.1 * wait_ratio + 0.9 * self.__adaptive_wait_ratio_ema
         old_sz = self.__prefetch_bucket_sz
-        if wait_ratio > 0.15:
-            # Fetch wait is a meaningful fraction of the step — prefetch more.
-            new_sz = int(old_sz * 1.25)
-        elif wait_ratio < 0.05:
-            # Almost no wait time — we're over-fetching; back off a little.
+        if self.__adaptive_wait_ratio_ema > 0.15:
+            new_sz = max(old_sz + 1, int(old_sz * 1.25))
+        elif self.__adaptive_wait_ratio_ema < 0.05:
             new_sz = int(old_sz * 0.90)
         else:
             return
-
-        new_sz = max(self.__adaptive_prefetch_min_sz, min(self.__adaptive_prefetch_max_sz, new_sz))
-        if new_sz != old_sz:
-            logger.info(
-                f"[ZeRO-3 adaptive prefetch] bucket size {old_sz} -> {new_sz} "
-                f"(wait_ratio={wait_ratio:.3f}, wait_ema={self.__fetch_wait_ema*1e3:.2f}ms, "
-                f"step_ema={self.__inter_step_ema*1e3:.2f}ms)")
-            self.__prefetch_bucket_sz = new_sz
+        self.__prefetch_bucket_sz = max(self.__adaptive_prefetch_min_sz, min(self.__adaptive_prefetch_max_sz, new_sz))
+        if self.__prefetch_bucket_sz != old_sz and dist.is_initialized():
+            debug_rank0(f"[ZeRO-3 adaptive prefetch] bucket size {old_sz} -> {self.__prefetch_bucket_sz} "
+                        f"(wait_ratio_ema={self.__adaptive_wait_ratio_ema:.3f})")
 
     def _invalidate_trace(self) -> None:
         if self.is_invalid_trace():
             raise RuntimeError("attempted to invalidate already invalid trace")
         self.__trace_mode = ZeRoTraceMode.INVALID
+        self.__adaptive_fetch_events.clear()
+        self.__adaptive_previous_fetch = None
+        self.__adaptive_trace_invalidated = True
         self._clear_trace_structures()
         self._clean_inflight_param_registry()
 
@@ -323,6 +345,15 @@ class PartitionedParameterCoordinator:
             return
 
         self._clean_inflight_param_registry()
+
+        if self.__adaptive_prefetch:
+            if self.__adaptive_sample_step:
+                self.__update_adaptive_prefetch()
+            self.__adaptive_fetch_events.clear()
+            self.__adaptive_previous_fetch = None
+            # Keep the cadence independent of local trace invalidation.
+            self.__adaptive_step_count += 1
+            self.__adaptive_sample_step = self.__adaptive_step_count % self.__adaptive_update_interval == 0
 
         if not self.is_complete_trace():  # not self.trace_complete:
             # Make sure that recorded submodule orders are identical across ranks
@@ -430,6 +461,11 @@ class PartitionedParameterCoordinator:
                     "inflight": [p.ds_id for p in self.__inflight_param_registry],
                 }))
 
+        adaptive_start = None
+        if self.__adaptive_prefetch and self.__adaptive_sample_step and self.is_complete_trace():
+            # Start before on-demand submission, which can serialize with compute
+            # when overlap_comm is disabled.
+            adaptive_start = self.__adaptive_timestamp()
         params_to_fetch = set(iter_params(current_submodule, recurse=is_leaf))
         fetch_numel = sum(
             [p.partition_numel() for p in params_to_fetch if p.ds_status == ZeroParamStatus.NOT_AVAILABLE])
@@ -456,7 +492,6 @@ class PartitionedParameterCoordinator:
         fast_fetch = self.fast_sharding_for_leaf_module and is_leaf
         # wait for parameters in the immediately needed submodule to become available
         in_checkpoint_recompute = forward and torch._C._current_graph_task_id() != -1
-        _wait_t0 = time.perf_counter() if self.__adaptive_prefetch else 0.0
         for param in params_to_fetch:
             param.ds_active_sub_modules.add(current_submodule.ds_id)
             # Only frozen params need recompute attribution; trainable ones release via their backward hook.
@@ -487,8 +522,8 @@ class PartitionedParameterCoordinator:
             AllGatherCoalescedHandle.free_buffer()
         self.__profiler.stop_event(wait_event_name, wait_numel)
 
-        if self.__adaptive_prefetch:
-            self.__update_adaptive_prefetch(_wait_t0)
+        if adaptive_start is not None:
+            self.__record_adaptive_fetch(adaptive_start, forward)
 
         # kick off parameter prefetches for upcoming modules
         # don't prefetch if we dont have a completed model trace

@@ -220,21 +220,23 @@ class DeepSpeedZeroConfig(DeepSpeedConfigModel):
 
     adaptive_prefetch_bucket_size: bool = Field(False, alias="stage3_adaptive_prefetch_bucket_size")
     """
-    Dynamically adjust the prefetch bucket size at runtime based on observed fetch-wait and compute
-    times. When enabled, ``prefetch_bucket_size`` is used as the starting point and is clamped
-    between ``adaptive_prefetch_min_size`` and ``adaptive_prefetch_max_size``. Disabled by default.
+    Adjust the prefetch bucket at iteration boundaries using sampled fetch stalls.
+    Decisions are shared across the data-parallel group. The starting value is
+    ``prefetch_bucket_size``, clamped to the adaptive bounds and ``max_live_parameters``.
+    Disabled by default.
     """
 
     adaptive_prefetch_min_size: int = Field(pp_int(1e7), ge=0, alias="stage3_adaptive_prefetch_min_size")
     """
-    Lower bound for the adaptive prefetch bucket size (in parameter elements). Only used when
+    Lower bound for the adaptive prefetch bucket size (in parameter elements), capped by
+    ``max_live_parameters``. Must not exceed ``adaptive_prefetch_max_size``. Only used when
     ``adaptive_prefetch_bucket_size`` is enabled.
     """
 
     adaptive_prefetch_max_size: int = Field(pp_int(5e8), ge=0, alias="stage3_adaptive_prefetch_max_size")
     """
-    Upper bound for the adaptive prefetch bucket size (in parameter elements). Only used when
-    ``adaptive_prefetch_bucket_size`` is enabled.
+    Upper bound for the adaptive prefetch bucket size (in parameter elements), capped by
+    ``max_live_parameters``. Only used when ``adaptive_prefetch_bucket_size`` is enabled.
     """
 
     param_persistence_threshold: int = Field(pp_int(1e5), ge=0, alias="stage3_param_persistence_threshold")
@@ -398,6 +400,12 @@ class DeepSpeedZeroConfig(DeepSpeedConfigModel):
     """
 
     # Validators
+    @model_validator(mode="after")
+    def adaptive_prefetch_bounds_valid(self):
+        if self.adaptive_prefetch_min_size > self.adaptive_prefetch_max_size:
+            raise ValueError("adaptive_prefetch_min_size must be <= adaptive_prefetch_max_size")
+        return self
+
     @model_validator(mode="after")
     def overlap_comm_valid(self):
         if self.overlap_comm is None:

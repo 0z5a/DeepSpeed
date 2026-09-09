@@ -2448,6 +2448,7 @@ class DeepSpeedEngine(Module):
                     timers=timers,
                     ds_config=self.config,
                     overlap_comm=self.zero_overlap_comm(),
+                    dp_process_group=self.seq_data_parallel_group,
                     prefetch_bucket_size=self.zero_prefetch_bucket_size(),
                     max_reuse_distance=self.zero_max_reuse_distance(),
                     max_live_parameters=self.zero_max_live_parameters(),

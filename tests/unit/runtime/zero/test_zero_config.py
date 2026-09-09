@@ -76,6 +76,11 @@ def test_zero_config_adaptive_prefetch_defaults():
     assert config.adaptive_prefetch_max_size == int(5e8)
 
 
+def test_zero_config_adaptive_prefetch_invalid_bounds():
+    with pytest.raises(ValueError, match="adaptive_prefetch_min_size"):
+        DeepSpeedZeroConfig(stage3_adaptive_prefetch_min_size=20, stage3_adaptive_prefetch_max_size=10)
+
+
 def test_zero_config_adaptive_prefetch_aliases():
     config = DeepSpeedZeroConfig(**{"stage3_adaptive_prefetch_bucket_size": True})
     assert config.adaptive_prefetch_bucket_size == True

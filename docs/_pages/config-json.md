@@ -574,6 +574,54 @@ Enabling and configuring ZeRO memory optimizations
 | The size of the fixed buffer for prefetching parameters. Smaller values use less memory, but can increase stalls due to communication. | `5e8`   |
 
 
+***stage3_adaptive_prefetch_bucket_size***: [boolean]
+
+Enable adaptive ZeRO-3 parameter prefetching. Defaults to `false`. When enabled,
+`stage3_prefetch_bucket_size` is the initial window, in parameter elements. The
+window is clamped before use to the adaptive bounds below and to
+`stage3_max_live_parameters`.
+
+The coordinator samples one iteration in ten after the model trace is complete.
+It measures fetch stalls on the compute stream using device events (host timing
+on accelerators that use host timers). It synchronizes the sampled events and
+reduces the observed stall ratios across the data-parallel group at the next
+iteration boundary. It does not synchronize events inside module fetch hooks.
+Forward and backward ratios are measured separately; the largest ratio across
+phases and ranks drives a shared moving average. Above 15%, the window grows by
+25%; below 5%, it shrinks by 10%. Otherwise, it stays unchanged. All ranks use
+the same window for the next iteration. Trace invalidation discards stale timing
+samples; an invalid sample on any rank skips the group-wide adjustment.
+
+This heuristic trades additional timing and periodic communication overhead for
+less manual tuning. Compare throughput, peak memory, and loss against a static
+window for your workload. The window counts parameter elements, not bytes, and
+does not reserve memory or prevent out-of-memory errors. A fetch can exceed the
+window to gather a whole parameter, and activations and optimizer state consume
+memory outside this budget.
+
+***stage3_adaptive_prefetch_min_size***: [integer]
+
+Minimum adaptive window in parameter elements. Defaults to `1e7`. Must be
+nonnegative and no larger than `stage3_adaptive_prefetch_max_size`. If
+`stage3_max_live_parameters` is smaller, that limit takes precedence.
+
+***stage3_adaptive_prefetch_max_size***: [integer]
+
+Maximum adaptive window in parameter elements. Defaults to `5e8`. The effective
+maximum also respects `stage3_max_live_parameters`. For example:
+
+```json
+{
+  "zero_optimization": {
+    "stage": 3,
+    "stage3_prefetch_bucket_size": 50000000,
+    "stage3_adaptive_prefetch_bucket_size": true,
+    "stage3_adaptive_prefetch_min_size": 10000000,
+    "stage3_adaptive_prefetch_max_size": 200000000
+  }
+}
+```
+
 ***stage3_param_persistence_threshold***: [integer]
 
 | Description                                                                                                                                                          | Default |
