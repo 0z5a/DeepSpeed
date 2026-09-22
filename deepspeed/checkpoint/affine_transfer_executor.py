@@ -33,6 +33,7 @@ no custom kernels: those all change the schedule, which is the last thing a firs
 mover should be perturbing.
 """
 
+import sys
 import zlib
 from dataclasses import dataclass
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
@@ -258,16 +259,34 @@ def execute_transfer(plan: TransferPlan,
         rank = 0
         device = torch.device('cpu')
 
-    _validate_buffers(plan, source_buffers, target_buffers, dtype, device, endpoints)
-    operations = build_operations(plan, endpoints, budget, element_size)
+    # A rank that cannot validate the transfer must still reach the exchange below: raising here would
+    # strand every peer in a collective that never completes. The reason is reported where it was
+    # found, and the verdict travels together with the digest.
+    try:
+        _validate_buffers(plan, source_buffers, target_buffers, dtype, device, endpoints)
+        operations = build_operations(plan, endpoints, budget, element_size)
+        rejected = 0
+    except AffineTransferExecutionError as error:
+        print(f'[transfer] rank {rank} rejected the plan: {error}', file=sys.stderr, flush=True)
+        operations = []
+        rejected = 1
 
     if dist.is_initialized() and dist.get_world_size(group=group) > 1:
+        # A fixed-size integer all_gather, not all_gather_object: the latter pickles its payload and
+        # runs several collectives to move a handful of bytes, which measured as a multi-millisecond
+        # floor under every transfer regardless of its size.
         digest = plan_digest(plan, endpoints, budget, element_size)
-        seen: List[int] = [0] * dist.get_world_size(group=group)
-        dist.all_gather_object(seen, digest, group=group)
-        if len(set(seen)) != 1:
+        local = torch.tensor([digest, rejected], dtype=torch.int64, device=device)
+        seen = [torch.zeros_like(local) for _ in range(dist.get_world_size(group=group))]
+        dist.all_gather(seen, local, group=group)
+        digests = {int(pair[0].item()) for pair in seen}
+        if any(int(pair[1].item()) for pair in seen):
             raise AffineTransferExecutionError(
-                f'ranks disagree about the transfer schedule ({sorted(set(seen))}); refusing to communicate')
+                'a rank rejected the transfer before it began; no data moved. The reason was reported '
+                'by that rank.')
+        if len(digests) != 1:
+            raise AffineTransferExecutionError(
+                f'ranks disagree about the transfer schedule ({sorted(digests)}); refusing to communicate')
 
     incoming: Dict[int, List[_Operation]] = {}
     outgoing: Dict[int, List[_Operation]] = {}
@@ -278,12 +297,18 @@ def execute_transfer(plan: TransferPlan,
             outgoing.setdefault(operation.to_process, []).append(operation)
 
     arenas: Dict[int, torch.Tensor] = {}
-    for peer, peer_operations in incoming.items():
-        largest = max(operation.elements for operation in peer_operations) * element_size
-        if largest > budget.bytes_per_peer:
+    send_arenas: Dict[int, torch.Tensor] = {}
+    for peer, peer_operations in sorted(incoming.items()):
+        elements = max(operation.elements for operation in peer_operations)
+        if elements * element_size > budget.bytes_per_peer:
             raise AffineTransferExecutionError(
-                f'peer {peer}: a single staged chunk needs {largest} bytes over a budget of {budget.bytes_per_peer}')
-        arenas[peer] = torch.empty(largest // element_size, dtype=dtype, device=device)
+                f'peer {peer}: a single staged chunk needs {elements * element_size} bytes over a budget '
+                f'of {budget.bytes_per_peer}')
+        arenas[peer] = torch.empty(elements, dtype=dtype, device=device)
+    for peer, peer_operations in sorted(outgoing.items()):
+        send_arenas[peer] = torch.empty(max(operation.elements for operation in peer_operations),
+                                       dtype=dtype,
+                                       device=device)
 
     rounds = max((len(peer_operations) for peer_operations in list(incoming.values()) + list(outgoing.values())),
                  default=0)
@@ -307,8 +332,10 @@ def execute_transfer(plan: TransferPlan,
                 continue
             operation = peer_operations[round_index]
             source = _flat(operation.segment.source_rank, source_buffers, dtype)
-            payload = _region(source, operation.source_offset, operation.chunk_shape,
-                              operation.segment.source_strides).contiguous().view(-1)
+            payload = send_arenas[peer][:operation.elements]
+            payload.view(operation.chunk_shape).copy_(
+                _region(source, operation.source_offset, operation.chunk_shape,
+                        operation.segment.source_strides))
             requests.append(dist.P2POp(dist.isend, payload, peer, group))
             staged.append((payload, operation))
 
