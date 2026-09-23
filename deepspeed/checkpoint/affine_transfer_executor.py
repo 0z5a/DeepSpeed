@@ -39,6 +39,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 import torch
+from deepspeed.accelerator import get_accelerator
 
 from .affine_transfer import TransferPlan, TransferSegment
 
@@ -90,7 +91,8 @@ class _Operation:
 
     @property
     def key(self) -> Tuple:
-        return (self.segment.logical_origin, self.segment.source_rank, self.segment.target_rank, self.chunk)
+        return (self.segment.target_rank, self.segment.target_offset, self.segment.source_rank,
+                self.segment.source_offset, self.chunk)
 
     @property
     def payload_bytes(self) -> int:
@@ -131,13 +133,12 @@ def _chunk_of(segment: TransferSegment, index: int, count: int, budget: StagingB
     length = min(per_chunk, extent - low)
     shape = segment.shape[:last] + (length, )
     return TransferSegment(source_rank=segment.source_rank,
-                          source_offset=segment.source_offset + low * segment.source_strides[last],
-                          source_strides=segment.source_strides,
-                          target_rank=segment.target_rank,
-                          target_offset=segment.target_offset + low * segment.target_strides[last],
-                          target_strides=segment.target_strides,
-                          shape=shape,
-                          logical_origin=segment.logical_origin[:last] + (segment.logical_origin[last] + low, ))
+                           source_offset=segment.source_offset + low * segment.source_strides[last],
+                           source_strides=segment.source_strides,
+                           target_rank=segment.target_rank,
+                           target_offset=segment.target_offset + low * segment.target_strides[last],
+                           target_strides=segment.target_strides,
+                           shape=shape)
 
 
 def build_operations(plan: TransferPlan, endpoints: TransferEndpoints, budget: StagingBudget,
@@ -149,31 +150,30 @@ def build_operations(plan: TransferPlan, endpoints: TransferEndpoints, budget: S
         for index in range(count):
             chunk = _chunk_of(segment, index, count, budget, element_size)
             operation = _Operation(segment=segment,
-                                  chunk=index,
-                                  chunk_shape=chunk.shape,
-                                  source_offset=chunk.source_offset,
-                                  target_offset=chunk.target_offset,
-                                  from_process=endpoints.source[segment.source_rank],
-                                  to_process=endpoints.target[segment.target_rank],
-                                  elements=chunk.numel,
-                                  _element_size=element_size)
+                                   chunk=index,
+                                   chunk_shape=chunk.shape,
+                                   source_offset=chunk.source_offset,
+                                   target_offset=chunk.target_offset,
+                                   from_process=endpoints.source[segment.source_rank],
+                                   to_process=endpoints.target[segment.target_rank],
+                                   elements=chunk.numel,
+                                   _element_size=element_size)
             operations.append(operation)
     operations.sort(key=lambda operation: operation.key)
     return operations
 
 
-def plan_digest(plan: TransferPlan, endpoints: TransferEndpoints, budget: StagingBudget,
-                element_size: int) -> int:
+def plan_digest(plan: TransferPlan, endpoints: TransferEndpoints, budget: StagingBudget, element_size: int) -> int:
     """A checksum over the schedule: geometry, addressing, endpoints and budget.
 
     Deliberately not over buffer contents -- those differ by design. This is the thing every rank must
     be able to compute before it owns any data, which is why dtype is an argument and not an
     inspection.
     """
-    payload = [(segment.source_rank, segment.target_rank, segment.source_offset, segment.target_offset,
-                segment.shape, segment.source_strides, segment.target_strides, segment.logical_origin)
-               for segment in plan.segments]
+    payload = [(segment.source_rank, segment.target_rank, segment.source_offset, segment.target_offset, segment.shape,
+                segment.source_strides, segment.target_strides) for segment in plan.segments]
     framed = {
+        'schema': 2,
         'segments': payload,
         'logical_shape': plan.logical_shape,
         'source_endpoints': dict(sorted(endpoints.source.items())),
@@ -185,13 +185,14 @@ def plan_digest(plan: TransferPlan, endpoints: TransferEndpoints, budget: Stagin
 
 
 def _validate_buffers(plan: TransferPlan, source_buffers: Mapping[int, torch.Tensor],
-                      target_buffers: Mapping[int, torch.Tensor], dtype: torch.dtype,
-                      device: torch.device, endpoints: TransferEndpoints) -> None:
+                      target_buffers: Mapping[int, torch.Tensor], dtype: torch.dtype, device: torch.device,
+                      endpoints: TransferEndpoints) -> None:
     for location, buffer in list(source_buffers.items()) + list(target_buffers.items()):
         if buffer.dtype != dtype:
             raise AffineTransferExecutionError(f'location {location}: buffer is {buffer.dtype}, plan expects {dtype}')
         if buffer.device != device:
-            raise AffineTransferExecutionError(f'location {location}: buffer is on {buffer.device}, transport is on {device}')
+            raise AffineTransferExecutionError(
+                f'location {location}: buffer is on {buffer.device}, transport is on {device}')
     for location in source_buffers:
         if location not in endpoints.source:
             raise AffineTransferExecutionError(f'source location {location} has no endpoint binding')
@@ -203,9 +204,7 @@ def _validate_buffers(plan: TransferPlan, source_buffers: Mapping[int, torch.Ten
     # fresh wrapper is returned per call, so id() would report no overlap even for one buffer.
     source_ranges = [_data_range(buffer) for buffer in source_buffers.values()]
     target_ranges = [_data_range(buffer) for buffer in target_buffers.values()]
-    if any(low_a < high_b and low_b < high_a
-           for low_a, high_a in source_ranges
-           for low_b, high_b in target_ranges):
+    if any(low_a < high_b and low_b < high_a for low_a, high_a in source_ranges for low_b, high_b in target_ranges):
         raise AffineTransferExecutionError(
             'a source and a target share storage; this executor does not order within-storage overlap')
 
@@ -236,7 +235,7 @@ def execute_transfer(plan: TransferPlan,
                      endpoints: TransferEndpoints,
                      dtype: torch.dtype,
                      budget: StagingBudget = StagingBudget(),
-                     group: Optional[torch.distributed.ProcessGroup] = None) -> TransferStats:
+                     group: Optional[object] = None) -> TransferStats:
     """Run every copy of ``plan`` that this process is one end of; block until all have landed.
 
     ``source_buffers`` and ``target_buffers`` are keyed by the plan's location ranks and need contain
@@ -245,7 +244,7 @@ def execute_transfer(plan: TransferPlan,
     allocation is addressed by its own storage offset, because making it contiguous would copy the
     whole shard, which is the cost this module exists to avoid.
     """
-    import torch.distributed as dist
+    import deepspeed.comm as dist
 
     element_size = torch.tensor(0, dtype=dtype).element_size()
     if element_size == 0:
@@ -253,8 +252,7 @@ def execute_transfer(plan: TransferPlan,
 
     if dist.is_initialized():
         rank = dist.get_rank(group=group)
-        device = torch.device('cuda', torch.cuda.current_device()) if torch.cuda.is_available(
-        ) else torch.device('cpu')
+        device = torch.device(get_accelerator().current_device_name())
     else:
         rank = 0
         device = torch.device('cpu')
@@ -307,8 +305,8 @@ def execute_transfer(plan: TransferPlan,
         arenas[peer] = torch.empty(elements, dtype=dtype, device=device)
     for peer, peer_operations in sorted(outgoing.items()):
         send_arenas[peer] = torch.empty(max(operation.elements for operation in peer_operations),
-                                       dtype=dtype,
-                                       device=device)
+                                        dtype=dtype,
+                                        device=device)
 
     rounds = max((len(peer_operations) for peer_operations in list(incoming.values()) + list(outgoing.values())),
                  default=0)
@@ -324,7 +322,7 @@ def execute_transfer(plan: TransferPlan,
                 continue
             operation = peer_operations[round_index]
             buffer = arenas[peer][:operation.elements]
-            requests.append(dist.P2POp(dist.irecv, buffer, peer, group))
+            requests.append(('recv', buffer, peer))
             staged.append((buffer, operation))
 
         for peer, peer_operations in sorted(outgoing.items()):
@@ -334,16 +332,15 @@ def execute_transfer(plan: TransferPlan,
             source = _flat(operation.segment.source_rank, source_buffers, dtype)
             payload = send_arenas[peer][:operation.elements]
             payload.view(operation.chunk_shape).copy_(
-                _region(source, operation.source_offset, operation.chunk_shape,
-                        operation.segment.source_strides))
-            requests.append(dist.P2POp(dist.isend, payload, peer, group))
+                _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
+            requests.append(('send', payload, peer))
             staged.append((payload, operation))
 
         # One batched stage per round, not one op at a time. On a process group of more than one rank
         # torch treats an individually posted P2P op as a collective, so a rank's lone irecv would be
         # matched against the peer's lone irecv and both would wait forever; a batch carries the send
         # and the receive together, which is what makes "arm receives before sends" actually hold.
-        handles = dist.batch_isend_irecv(requests)
+        handles = dist.batch_p2p(requests, group=group)
         for handle in handles:
             handle.wait()
 
@@ -361,10 +358,8 @@ def execute_transfer(plan: TransferPlan,
             continue
         source = _flat(operation.segment.source_rank, source_buffers, dtype)
         target = _flat(operation.segment.target_rank, target_buffers, dtype)
-        _region(target, operation.target_offset, operation.chunk_shape,
-                operation.segment.target_strides).copy_(
-                    _region(source, operation.source_offset, operation.chunk_shape,
-                            operation.segment.source_strides))
+        _region(target, operation.target_offset, operation.chunk_shape, operation.segment.target_strides).copy_(
+            _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
         copied += operation.payload_bytes
 
     return TransferStats(segments=len(plan.segments),
@@ -391,8 +386,7 @@ def _flat(location: int, buffers: Mapping[int, torch.Tensor], dtype: torch.dtype
         raise AffineTransferExecutionError(f'location {location} is bound to this process but holds no buffer')
     flat = buffer.reshape(-1)
     if flat.stride(0) != 1:
-        raise AffineTransferExecutionError(
-            f'location {location}: shard is not contiguous in its own storage')
+        raise AffineTransferExecutionError(f'location {location}: shard is not contiguous in its own storage')
     if flat.dtype != dtype:
         raise AffineTransferExecutionError(f'location {location}: {flat.dtype} is not {dtype}')
     return flat
