@@ -255,7 +255,7 @@ class TestB2BatchTransfer(DistributedTest):
                 for location in source.shard_shapes if endpoints.source[location] == dist.get_rank()
             }
             targets = _targets(target, endpoints, torch.float32)
-            requests.append(TransferRequest(plan_transfer(target, source), sources, targets))
+            requests.append(TransferRequest(f'tensor-{index}', plan_transfer(target, source), sources, targets))
             expected.append((targets, full))
 
         stats = execute_transfers(requests, endpoints, torch.float32)
@@ -283,9 +283,25 @@ class TestB2BatchTransfer(DistributedTest):
         targets = _targets(target, endpoints, torch.float32)
         if dist.get_rank() == 0:
             targets[0] = targets[0][:1].clone()
-        request = TransferRequest(plan_transfer(target, source), sources, targets)
+        request = TransferRequest('one', plan_transfer(target, source), sources, targets)
         with pytest.raises(AffineTransferExecutionError, match='rejected the transfer batch'):
             execute_transfers([request], endpoints, torch.float32)
+
+    def test_batch_parameter_order_must_match(self):
+        _join_transfer_group()
+        source, target = _row_to_column(self.world_size)
+        full = _full(16, 16, torch.float32)
+        endpoints = TransferEndpoints(source={0: 0, 1: 1}, target={0: 0, 1: 1})
+        sources = {
+            location: source.extract(full, location).contiguous()
+            for location in source.shard_shapes if endpoints.source[location] == dist.get_rank()
+        }
+        plan = plan_transfer(target, source)
+        first = TransferRequest('first', plan, sources, _targets(target, endpoints, torch.float32))
+        second = TransferRequest('second', plan, sources, _targets(target, endpoints, torch.float32))
+        requests = [first, second] if dist.get_rank() == 0 else [second, first]
+        with pytest.raises(AffineTransferExecutionError, match='batch schedule'):
+            execute_transfers(requests, endpoints, torch.float32)
 
 
 class TestB2DisjointEndpoints(DistributedTest):

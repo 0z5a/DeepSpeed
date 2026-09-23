@@ -79,6 +79,8 @@ class TransferStats:
 
 @dataclass(frozen=True)
 class TransferRequest:
+    """One parameter; ``key`` must identify it identically on every process."""
+    key: str
     plan: TransferPlan
     source_buffers: Mapping[int, torch.Tensor]
     target_buffers: Mapping[int, torch.Tensor]
@@ -402,6 +404,8 @@ def execute_transfers(requests: Sequence[TransferRequest],
     indexed = []
     rejected = 0
     try:
+        if len({request.key for request in requests}) != len(requests):
+            raise AffineTransferExecutionError('duplicate transfer batch key')
         for item, request in enumerate(requests):
             _validate_buffers(request.plan, request.source_buffers, request.target_buffers, dtype, device, endpoints)
             indexed.extend(
@@ -418,7 +422,8 @@ def execute_transfers(requests: Sequence[TransferRequest],
 
     if dist.is_initialized() and dist.get_world_size(group=group) > 1:
         fingerprint = (str(dtype),
-                       tuple(plan_digest(request.plan, endpoints, budget, element_size) for request in requests))
+                       tuple((request.key, plan_digest(request.plan, endpoints, budget, element_size))
+                             for request in requests))
         local = torch.tensor([zlib.crc32(repr(fingerprint).encode()), rejected], dtype=torch.int64, device=device)
         seen = [torch.zeros_like(local) for _ in range(dist.get_world_size(group=group))]
         dist.all_gather(seen, local, group=group)
