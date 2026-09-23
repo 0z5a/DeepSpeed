@@ -33,7 +33,8 @@ from deepspeed.accelerator import get_accelerator
 from deepspeed.checkpoint.affine import contiguous_split_map, replicated_map
 from deepspeed.checkpoint.affine_transfer import PlanBudget, plan_transfer
 from deepspeed.checkpoint.affine_transfer_executor import (AffineTransferExecutionError, StagingBudget,
-                                                           TransferEndpoints, execute_transfer)
+                                                           TransferEndpoints, TransferRequest, execute_transfer,
+                                                           execute_transfers)
 from unit.common import DistributedTest
 
 UNWRITTEN = float('nan')
@@ -236,6 +237,55 @@ class TestB2Transfer(DistributedTest):
         with pytest.raises(AffineTransferExecutionError, match='before it began'):
             execute_transfer(plan_transfer(target, source, PlanBudget()), source_buffers, target_buffers, endpoints,
                              dtype, StagingBudget(bytes_per_peer=256))
+
+
+class TestB2BatchTransfer(DistributedTest):
+    world_size = 2
+
+    def test_many_small_tensors_share_peer_messages(self):
+        _join_transfer_group()
+        source, target = _row_to_column(self.world_size)
+        endpoints = TransferEndpoints(source={0: 0, 1: 1}, target={0: 0, 1: 1})
+        requests = []
+        expected = []
+        for index in range(16):
+            full = _full(16, 16, torch.float32) + index * 1024
+            sources = {
+                location: source.extract(full, location).contiguous()
+                for location in source.shard_shapes if endpoints.source[location] == dist.get_rank()
+            }
+            targets = _targets(target, endpoints, torch.float32)
+            requests.append(TransferRequest(plan_transfer(target, source), sources, targets))
+            expected.append((targets, full))
+
+        stats = execute_transfers(requests, endpoints, torch.float32)
+        assert stats.rounds == 1
+        for targets, full in expected:
+            _assert_matches(targets, target, full)
+
+        for targets, _ in expected:
+            for buffer in targets.values():
+                buffer.fill_(UNWRITTEN)
+        stats = execute_transfers(requests, endpoints, torch.float32, StagingBudget(bytes_per_peer=128))
+        assert stats.rounds > 1
+        for targets, full in expected:
+            _assert_matches(targets, target, full)
+
+    def test_batch_refusal_reaches_every_rank(self):
+        _join_transfer_group()
+        source, target = _row_to_column(self.world_size)
+        full = _full(16, 16, torch.float32)
+        endpoints = TransferEndpoints(source={0: 0, 1: 1}, target={0: 0, 1: 1})
+        sources = {
+            location: source.extract(full, location).contiguous()
+            for location in source.shard_shapes if endpoints.source[location] == dist.get_rank()
+        }
+        targets = _targets(target, endpoints, torch.float32)
+        if dist.get_rank() == 0:
+            targets[0] = targets[0][:1].clone()
+        request = TransferRequest(plan_transfer(target, source), sources, targets)
+        with pytest.raises(AffineTransferExecutionError, match='rejected the transfer batch'):
+            execute_transfers([request], endpoints, torch.float32)
 
 
 class TestB2DisjointEndpoints(DistributedTest):

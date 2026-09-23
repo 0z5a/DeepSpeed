@@ -44,8 +44,8 @@ from deepspeed.accelerator import get_accelerator
 from .affine_transfer import TransferPlan, TransferSegment
 
 __all__ = [
-    'AffineTransferExecutionError', 'TransferEndpoints', 'StagingBudget', 'TransferStats', 'plan_digest',
-    'execute_transfer'
+    'AffineTransferExecutionError', 'TransferEndpoints', 'StagingBudget', 'TransferStats', 'TransferRequest',
+    'plan_digest', 'execute_transfer', 'execute_transfers'
 ]
 
 
@@ -75,6 +75,13 @@ class TransferStats:
     local_copy_bytes: int
     sent_bytes: int
     received_bytes: int
+
+
+@dataclass(frozen=True)
+class TransferRequest:
+    plan: TransferPlan
+    source_buffers: Mapping[int, torch.Tensor]
+    target_buffers: Mapping[int, torch.Tensor]
 
 
 @dataclass(frozen=True)
@@ -368,6 +375,122 @@ def execute_transfer(plan: TransferPlan,
                          local_copy_bytes=copied,
                          sent_bytes=sent,
                          received_bytes=received)
+
+
+def _packed_rounds(indexed_operations: Sequence[Tuple[int, _Operation]], max_elements: int):
+    rounds = []
+    for item, operation in indexed_operations:
+        if not rounds or rounds[-1][1] + operation.elements > max_elements:
+            rounds.append(([], 0))
+        entries, used = rounds[-1]
+        entries.append((item, operation, used))
+        rounds[-1] = (entries, used + operation.elements)
+    return rounds
+
+
+def execute_transfers(requests: Sequence[TransferRequest],
+                      endpoints: TransferEndpoints,
+                      dtype: torch.dtype,
+                      budget: StagingBudget = StagingBudget(),
+                      group: Optional[object] = None) -> TransferStats:
+    """Move several parameters with one schedule agreement and packed peer messages."""
+    import deepspeed.comm as dist
+
+    rank = dist.get_rank(group=group) if dist.is_initialized() else 0
+    device = torch.device(get_accelerator().current_device_name()) if dist.is_initialized() else torch.device('cpu')
+    element_size = torch.empty((), dtype=dtype).element_size()
+    indexed = []
+    rejected = 0
+    try:
+        for item, request in enumerate(requests):
+            _validate_buffers(request.plan, request.source_buffers, request.target_buffers, dtype, device, endpoints)
+            indexed.extend(
+                (item, operation) for operation in build_operations(request.plan, endpoints, budget, element_size))
+        max_elements = budget.bytes_per_peer // element_size
+        for item, operation in indexed:
+            if operation.elements > max_elements:
+                raise AffineTransferExecutionError(
+                    f'a staged chunk needs {operation.payload_bytes} bytes over the budget')
+    except AffineTransferExecutionError as error:
+        print(f'[transfer] rank {rank} rejected the batch: {error}', file=sys.stderr, flush=True)
+        indexed = []
+        rejected = 1
+
+    if dist.is_initialized() and dist.get_world_size(group=group) > 1:
+        fingerprint = (str(dtype),
+                       tuple(plan_digest(request.plan, endpoints, budget, element_size) for request in requests))
+        local = torch.tensor([zlib.crc32(repr(fingerprint).encode()), rejected], dtype=torch.int64, device=device)
+        seen = [torch.zeros_like(local) for _ in range(dist.get_world_size(group=group))]
+        dist.all_gather(seen, local, group=group)
+        if any(int(pair[1].item()) for pair in seen):
+            raise AffineTransferExecutionError('a rank rejected the transfer batch before data moved')
+        if len({int(pair[0].item()) for pair in seen}) != 1:
+            raise AffineTransferExecutionError('ranks disagree about the transfer batch schedule')
+    elif rejected:
+        raise AffineTransferExecutionError('the transfer batch was rejected before data moved')
+
+    incoming: Dict[int, List[Tuple[int, _Operation]]] = {}
+    outgoing: Dict[int, List[Tuple[int, _Operation]]] = {}
+    local_copies = []
+    for item, operation in indexed:
+        if operation.from_process == operation.to_process == rank:
+            local_copies.append((item, operation))
+        elif operation.to_process == rank:
+            incoming.setdefault(operation.from_process, []).append((item, operation))
+        elif operation.from_process == rank:
+            outgoing.setdefault(operation.to_process, []).append((item, operation))
+
+    max_elements = budget.bytes_per_peer // element_size
+    recv_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in incoming.items()}
+    send_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in outgoing.items()}
+    recv_arenas = {
+        peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
+        for peer, rounds in recv_rounds.items()
+    }
+    send_arenas = {
+        peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
+        for peer, rounds in send_rounds.items()
+    }
+    rounds = max((len(value) for value in list(recv_rounds.values()) + list(send_rounds.values())), default=0)
+    sent = received = copied = 0
+
+    for round_index in range(rounds):
+        p2p = []
+        for peer, peer_rounds in sorted(recv_rounds.items()):
+            if round_index < len(peer_rounds):
+                p2p.append(('recv', recv_arenas[peer][:peer_rounds[round_index][1]], peer))
+        for peer, peer_rounds in sorted(send_rounds.items()):
+            if round_index >= len(peer_rounds):
+                continue
+            entries, count = peer_rounds[round_index]
+            arena = send_arenas[peer]
+            for item, operation, offset in entries:
+                source = _flat(operation.segment.source_rank, requests[item].source_buffers, dtype)
+                arena[offset:offset + operation.elements].view(operation.chunk_shape).copy_(
+                    _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
+                sent += operation.payload_bytes
+            p2p.append(('send', arena[:count], peer))
+        for handle in dist.batch_p2p(p2p, group=group):
+            handle.wait()
+        for peer, peer_rounds in recv_rounds.items():
+            if round_index >= len(peer_rounds):
+                continue
+            for item, operation, offset in peer_rounds[round_index][0]:
+                target = _flat(operation.segment.target_rank, requests[item].target_buffers, dtype)
+                payload = recv_arenas[peer][offset:offset + operation.elements].view(operation.chunk_shape)
+                _region(target, operation.target_offset, operation.chunk_shape,
+                        operation.segment.target_strides).copy_(payload)
+                received += operation.payload_bytes
+
+    for item, operation in local_copies:
+        source = _flat(operation.segment.source_rank, requests[item].source_buffers, dtype)
+        target = _flat(operation.segment.target_rank, requests[item].target_buffers, dtype)
+        _region(target, operation.target_offset, operation.chunk_shape, operation.segment.target_strides).copy_(
+            _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
+        copied += operation.payload_bytes
+
+    return TransferStats(sum(len(request.plan.segments) for request in requests), len(indexed), rounds, copied, sent,
+                         received)
 
 
 def _data_range(buffer: torch.Tensor) -> Tuple[int, int]:
