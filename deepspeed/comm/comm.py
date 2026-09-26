@@ -9,6 +9,7 @@
         -- use torch.distributed directly if both this package and torch.distributed use the same NCCL version
         -- use custom collectives
             -- can either use torch.dist or ds.ops.comm?
+        Note: the old 1-bit compressed allreduce variants that resided in deepspeed.runtime.comm will be moved here as well.
     deepspeed.comm API
         -- must be kept fully compatible (same signatures) as torch.dist API to ensure backward/cross-framework compatibility.
         -- e.g. if a client code used
@@ -409,6 +410,17 @@ def isend(tensor, dst, group=None, tag=0, prof=False, log_name='isend', debug=ge
 def irecv(tensor, src=None, group=None, tag=0, prof=False, log_name='irecv', debug=get_caller_func()):
     global cdb
     return cdb.irecv(tensor=tensor, src=src, group=group, tag=tag)
+
+
+def batch_p2p(operations, group=None):
+    """Post (direction, tensor, peer) pairs together on the PyTorch backend."""
+    if not isinstance(cdb, TorchBackend):
+        raise RuntimeError('batch_p2p requires the PyTorch communication backend')
+    ops = [
+        torch.distributed.P2POp(torch.distributed.irecv if direction == 'recv' else torch.distributed.isend, tensor,
+                                peer, group) for direction, tensor, peer in operations
+    ]
+    return torch.distributed.batch_isend_irecv(ops)
 
 
 @timed_op
