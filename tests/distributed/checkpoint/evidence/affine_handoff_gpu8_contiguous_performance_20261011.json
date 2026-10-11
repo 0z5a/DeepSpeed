@@ -1,0 +1,187 @@
+{
+  "status": "PASS",
+  "audit_scope": "Independent recomputation of all stored rank samples and paired-window summaries",
+  "hardware": {
+    "h100_count": 8,
+    "nodes": 2
+  },
+  "profile": {
+    "logical_bytes": 1073741824,
+    "parameters": 32,
+    "shape": [
+      128,
+      512,
+      256
+    ],
+    "peer_bytes": 8388608,
+    "dtype": "bf16"
+  },
+  "pilot_samples_per_route": 3,
+  "paired_iteration_policy": "nondecreasing count across completed paired windows",
+  "paired_windows": 5,
+  "minimum_window_seconds": 60,
+  "window_reports": [
+    {
+      "window": 0,
+      "route": "rebuild_extract",
+      "iterations": 3344,
+      "maximum_rank_wall_seconds": 69.38802510098321,
+      "p50_ms": 20.851592969847843,
+      "p95_ms": 21.38348895823583,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 0,
+      "route": "candidate",
+      "iterations": 3344,
+      "maximum_rank_wall_seconds": 69.01539655402303,
+      "p50_ms": 21.426712482934818,
+      "p95_ms": 22.54142297897488,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 1,
+      "route": "candidate",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 70.03934707201552,
+      "p50_ms": 21.33859001332894,
+      "p95_ms": 22.58938702289015,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 1,
+      "route": "rebuild_extract",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 70.41849019599613,
+      "p50_ms": 20.867754996288568,
+      "p95_ms": 21.397530974354595,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 2,
+      "route": "rebuild_extract",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 70.41977730102371,
+      "p50_ms": 20.876770955510437,
+      "p95_ms": 21.416910050902516,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 2,
+      "route": "candidate",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 69.5034116259776,
+      "p50_ms": 21.36209700256586,
+      "p95_ms": 22.243647021241486,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 3,
+      "route": "candidate",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 69.91899547399953,
+      "p50_ms": 21.437278017401695,
+      "p95_ms": 22.532182978466153,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 3,
+      "route": "rebuild_extract",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 70.5317819659831,
+      "p50_ms": 20.908049016725272,
+      "p95_ms": 21.441525022964925,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 4,
+      "route": "rebuild_extract",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 70.41123792598955,
+      "p50_ms": 20.869744999799877,
+      "p95_ms": 21.422012010589242,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 4,
+      "route": "candidate",
+      "iterations": 3391,
+      "maximum_rank_wall_seconds": 69.29969687497942,
+      "p50_ms": 21.40594500815496,
+      "p95_ms": 22.43666199501604,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    }
+  ],
+  "paired_p50_speedup_ratios": [
+    0.9731587608904061,
+    0.9779350455327053,
+    0.9772809735393895,
+    0.975312677278952,
+    0.9749508835909461
+  ],
+  "geometric_mean_paired_p50_speedup": 0.9757261654686072,
+  "paired_window_bootstrap_ci95": [
+    0.9743059335911184,
+    0.9772067138608922
+  ],
+  "candidate_latency_change_percent": 2.487771199590094,
+  "candidate_faster_within_paired_interval": false,
+  "performance_conclusion": "slower than rebuild/extract",
+  "bootstrap_resamples": 20000,
+  "bootstrap_seed": 20261011,
+  "bootstrap_method": "Resample five paired log speedup ratios with replacement; exp(mean); percentile indices 499 and 19499.",
+  "median_of_window_p50_ms": {
+    "rebuild_extract": 20.869744999799877,
+    "candidate": 21.40594500815496
+  },
+  "rank_timing_samples_verified": 270528,
+  "eight_workers_natural_exit_zero": true,
+  "source_files_verified": 635,
+  "timings_jsonl_sha256": "4f043616984969b508108335ecf2991261431e75743d900febce25daae21cdd6",
+  "benchmark_source_sha256": "2f92a365fa91905fd6772d26f31a1b097ac0e2e0626e0280391c787cf1efa0c5",
+  "legacy_published_b2": "NOT_RUN_NO_LEGACY_SOURCE",
+  "full_model_or_serving_cycle": "NOT_RUN",
+  "timing_scope": "Synthetic frozen expert handoff; same-process alternating-order paired windows. Includes transfer and target readiness. No restart or general full-model interval.",
+  "memory_scope": "process-resident baseline/candidate buffers and PyTorch cache; add whole-GPU telemetry separately",
+  "finished": 1791723247.9793015,
+  "source_base_commit": "490a8b8cc91f561ab4ebe7e413c7fa19605058cc",
+  "executed_source_sha256": {
+    "deepspeed/checkpoint/affine_transfer.py": "15c1bfb525a906aa47e984e9a6b36af334d06fa45ba9917fbf34b674eeb07271",
+    "deepspeed/checkpoint/affine_transfer_executor.py": "fcf75d70d013bb462fe3bc30e3e1a89553516cbe6421943a84e5e4b6d9f6834c",
+    "deepspeed/checkpoint/autoep_transfer.py": "6ffa5ae920b15fc7812cc54be85b772d22ea8b74715ee37350b6dec36a4c6651",
+    "tests/distributed/checkpoint/affine_handoff_h100.py": "60e31b98ada90adbcfd6d87201d7000949f9066a19a2fed0661ca208ff0f054d",
+    "deepspeed/comm/comm.py": "e0cbc6406deea4cf3a742da1e7610ed1654178d9a507e27f2c0b7d3461f22d83",
+    "deepspeed/comm/torch.py": "e228c228c7d4152b6dfd149c8a2e8c57b02a746e3362c1c2308b2998a1c0b4c5"
+  },
+  "correctness_evidence": "affine_handoff_gpu8_contiguous_20261011.json",
+  "runtime": {
+    "torch": "2.12.1+cu130",
+    "cuda": "13.0",
+    "nccl": [
+      2,
+      29,
+      7
+    ]
+  },
+  "cpu_regression_tests": {
+    "passed": 49,
+    "status": "PASS"
+  },
+  "historical_candidate_comparison": {
+    "prior_evidence": "affine_handoff_gpu8_performance_20261011.json",
+    "prior_candidate_median_of_window_p50_ms": 38.70233497582376,
+    "current_candidate_median_of_window_p50_ms": 21.40594500815496,
+    "observed_latency_reduction_percent": 44.69081769478085,
+    "scope": "Separate runs; descriptive comparison only, without a paired interval or restart claim."
+  }
+}

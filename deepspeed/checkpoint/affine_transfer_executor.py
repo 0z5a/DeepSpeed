@@ -270,6 +270,22 @@ def _packed_rounds(indexed_operations: Sequence[Tuple[int, _Operation]], max_ele
     return rounds
 
 
+def _direct_payload(entries, requests, dtype, source):
+    if len(entries) != 1:
+        return None
+    item, operation, _ = entries[0]
+    request, segment = requests[item], operation.segment
+    if source:
+        flat = _flat(segment.source_rank, request.source_buffers, dtype)
+        offset, strides = operation.source_offset, segment.source_strides
+    else:
+        flat = _flat(segment.target_rank, request.target_buffers, dtype)
+        offset, strides = operation.target_offset, segment.target_strides
+    region = _region(flat, offset, operation.chunk_shape, strides)
+    # A view can replace staging only when the transport sees the same packed element order.
+    return region.view(-1) if region.is_contiguous() else None
+
+
 @torch.no_grad()
 def execute_transfers(requests: Sequence[TransferRequest],
                       endpoints: TransferEndpoints,
@@ -290,6 +306,7 @@ def execute_transfers(requests: Sequence[TransferRequest],
     device = torch.device(get_accelerator().current_device_name()) if initialized else torch.device('cpu')
     indexed, local_copies = [], []
     recv_rounds, send_rounds, recv_arenas, send_arenas = {}, {}, {}, {}
+    recv_direct, send_direct = {}, {}
     digest, rejected = 0, 0
     error = None
     try:
@@ -332,13 +349,27 @@ def execute_transfers(requests: Sequence[TransferRequest],
         max_elements = budget.bytes_per_peer // element_size
         recv_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in incoming.items()}
         send_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in outgoing.items()}
-        recv_arenas = {
-            peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
+        recv_direct = {
+            peer: [_direct_payload(entries, requests, dtype, False) for entries, _ in rounds]
             for peer, rounds in recv_rounds.items()
         }
-        send_arenas = {
-            peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
+        send_direct = {
+            peer: [_direct_payload(entries, requests, dtype, True) for entries, _ in rounds]
             for peer, rounds in send_rounds.items()
+        }
+        recv_arenas = {
+            peer:
+            torch.empty(max(count for index, (_, count) in enumerate(rounds) if recv_direct[peer][index] is None),
+                        dtype=dtype,
+                        device=device)
+            for peer, rounds in recv_rounds.items() if any(payload is None for payload in recv_direct[peer])
+        }
+        send_arenas = {
+            peer:
+            torch.empty(max(count for index, (_, count) in enumerate(rounds) if send_direct[peer][index] is None),
+                        dtype=dtype,
+                        device=device)
+            for peer, rounds in send_rounds.items() if any(payload is None for payload in send_direct[peer])
         }
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OverflowError, MemoryError) as caught:
         error = caught
@@ -349,35 +380,45 @@ def execute_transfers(requests: Sequence[TransferRequest],
     # Invalid metadata must not be inspected again while constructing the agreement payload.
     if world_size > 1:
         local = torch.tensor([digest, rejected], dtype=torch.int64, device=device)
-        seen = [torch.zeros_like(local) for _ in range(world_size)]
-        dist.all_gather(seen, local, group=group)
-        if any(int(pair[1].item()) for pair in seen):
+        seen = torch.empty((world_size, 2), dtype=torch.int64, device=device)
+        dist.all_gather(list(seen.unbind(0)), local, group=group)
+        # Read the complete decision once instead of synchronizing each rank's scalar separately.
+        decisions = seen.cpu().tolist()
+        if any(pair[1] for pair in decisions):
             raise AffineTransferExecutionError(
                 'a rank rejected the transfer batch before it began; no data moved') from error
-        if len({int(pair[0].item()) for pair in seen}) != 1:
+        if len({pair[0] for pair in decisions}) != 1:
             raise AffineTransferExecutionError('ranks disagree about the transfer schedule (batch schedule)')
     elif rejected:
         raise AffineTransferExecutionError(f'the transfer batch was rejected before data moved: {error}') from error
 
     rounds = max((len(value) for value in list(recv_rounds.values()) + list(send_rounds.values())), default=0)
     sent = received = copied = 0
+    pending = []
 
     for round_index in range(rounds):
         p2p = []
         for peer, peer_rounds in sorted(recv_rounds.items()):
             if round_index < len(peer_rounds):
-                p2p.append(('recv', recv_arenas[peer][:peer_rounds[round_index][1]], peer))
+                payload = recv_direct[peer][round_index]
+                if payload is None:
+                    payload = recv_arenas[peer][:peer_rounds[round_index][1]]
+                p2p.append(('recv', payload, peer))
         for peer, peer_rounds in sorted(send_rounds.items()):
             if round_index >= len(peer_rounds):
                 continue
             entries, count = peer_rounds[round_index]
-            arena = send_arenas[peer]
-            for item, operation, offset in entries:
-                source = _flat(operation.segment.source_rank, requests[item].source_buffers, dtype)
-                arena[offset:offset + operation.elements].view(operation.chunk_shape).copy_(
-                    _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
-                sent += operation.payload_bytes
-            p2p.append(('send', arena[:count], peer))
+            payload = send_direct[peer][round_index]
+            if payload is None:
+                arena = send_arenas[peer]
+                for item, operation, offset in entries:
+                    source = _flat(operation.segment.source_rank, requests[item].source_buffers, dtype)
+                    arena[offset:offset + operation.elements].view(operation.chunk_shape).copy_(
+                        _region(source, operation.source_offset, operation.chunk_shape,
+                                operation.segment.source_strides))
+                payload = arena[:count]
+            sent += count * element_size
+            p2p.append(('send', payload, peer))
         operations = [
             dist.P2POp(dist.irecv if direction == 'recv' else dist.isend,
                        buffer,
@@ -386,16 +427,29 @@ def execute_transfers(requests: Sequence[TransferRequest],
         ]
         if operations:
             for handle in dist.batch_isend_irecv(operations):
+                block_stream = getattr(handle, 'block_current_stream', None)
+                if device.type == 'cuda' and callable(block_stream):
+                    # Order arena reuse on the caller stream without a host polling delay per round.
+                    block_stream()
+                    pending.append(handle)
+                else:
+                    handle.wait()
+        # Bound retained work and still observe every transport error before returning.
+        if (round_index + 1) % 8 == 0 or round_index + 1 == rounds:
+            for handle in pending:
                 handle.wait()
+            pending.clear()
         for peer, peer_rounds in recv_rounds.items():
             if round_index >= len(peer_rounds):
+                continue
+            received += peer_rounds[round_index][1] * element_size
+            if recv_direct[peer][round_index] is not None:
                 continue
             for item, operation, offset in peer_rounds[round_index][0]:
                 target = _flat(operation.segment.target_rank, requests[item].target_buffers, dtype)
                 payload = recv_arenas[peer][offset:offset + operation.elements].view(operation.chunk_shape)
                 _region(target, operation.target_offset, operation.chunk_shape,
                         operation.segment.target_strides).copy_(payload)
-                received += operation.payload_bytes
 
     for item, operation in local_copies:
         source = _flat(operation.segment.source_rank, requests[item].source_buffers, dtype)

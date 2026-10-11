@@ -501,7 +501,31 @@ its shared paired iteration count. That count cannot decrease after completed
 windows, so an unusually slow later pilot cannot shorten an already qualified
 window size. A measured window below the one-minute minimum still fails.
 
-The corresponding synthetic performance record in
+For a peer message containing one contiguous region, the executor sends or
+receives directly through a view of the existing shard. A strided region or a
+message combining several regions still uses the bounded staging arena.
+Source and target independently choose their local storage path; the packed
+wire order and per-peer message limit stay the same. Both paths preserve
+storage offsets, collective rejection before writes, and completion before
+return. No staging arena is allocated for a peer direction that needs only
+contiguous views.
+
+CUDA work handles that support stream blocking order arena reuse and unpacking
+on the caller's current stream. The host may enqueue up to eight rounds before
+waiting on every retained handle. The per-round peer budget and GPU ordering
+are preserved; errors are checked at each bounded drain and the caller stream
+is synchronized before return. Backends without stream blocking retain the
+immediate per-handle wait.
+
+The contiguous-view and stream-order implementation is qualified separately in
+``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_contiguous_20261011.json``.
+It repeats all 304 original BF16/FP32 records and adds eight rank records for
+mixed contiguous/strided regions with nonzero storage offsets and source/target
+guards on a separate caller CUDA stream. All 24 workers exit normally.
+The CPU suite passes 49 tests, including
+rejection of incomplete or changed correctness source inventories.
+
+The earlier synthetic performance record, before contiguous views, in
 ``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_performance_20261011.json``
 uses 1 GiB of BF16 expert weights, 32 parameters, and an 8 MiB per-peer staging
 budget. All five alternating-order pairs completed with both routes meeting the one-minute
@@ -515,6 +539,21 @@ run; it does not measure restart variability or full-model serving performance.
 An earlier attempt failed the minimum-window guard and is preserved separately,
 excluded from these statistics. All eight workers in the final run exited
 normally, and an independent reader recomputed every stored rank timing sample.
+
+The contiguous-view and stream-order rerun in
+``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_contiguous_performance_20261011.json``
+uses the same frozen profile and five alternating-order paired windows.
+The median of window p50 latencies is 20.870 ms for
+rebuild/extract and 21.406 ms for the candidate. The geometric
+mean paired p50 speedup is 0.9757x,
+with a paired-window bootstrap 95% interval of [0.9743, 0.9772].
+The candidate is 2.49% slower on this profile.
+Compared with the earlier candidate measurement of 38.702 ms, its
+observed latency reduction is 44.69%. That last comparison is between
+separate runs and has no paired confidence interval. The current baseline
+comparison remains within one process run; no full-model or restart claim is made.
+All eight workers exit normally, and the independent reader verifies
+270528 raw rank timings.
 
 Full-model expert updates and concurrent generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

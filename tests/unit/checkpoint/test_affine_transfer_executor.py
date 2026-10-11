@@ -279,6 +279,49 @@ class TestB2Transfer(DistributedTest):
 class TestB2BatchTransfer(DistributedTest):
     world_size = 2
 
+    def test_mixed_packed_and_strided_regions_preserve_storage_windows(self):
+        _join_transfer_group()
+        world, rank = dist.get_world_size(), dist.get_rank()
+        width = 4 * world
+        endpoints = TransferEndpoints({location: location
+                                       for location in range(world)},
+                                      {location: (location + world // 2) % world
+                                       for location in range(world)})
+        requests, checks, guards = [], [], []
+        # Flattening a noncontiguous region or ignoring a shard's storage offset corrupts this batch.
+        for index, (source_axis, target_axis) in enumerate(((0, 0), (0, 1), (1, 0))):
+            full = _full(width, width, torch.float32) + index * width * width
+            source_map = contiguous_split_map((width, width), [4] * world, source_axis)
+            target_map = contiguous_split_map((width, width), [4] * world, target_axis)
+            sources, targets = {}, {}
+            for map_, bindings, buffers, is_source in ((source_map, endpoints.source, sources, True),
+                                                       (target_map, endpoints.target, targets, False)):
+                for location, shape in map_.shard_shapes.items():
+                    if bindings[location] != rank:
+                        continue
+                    size = math.prod(shape)
+                    storage = torch.full((size + 12, ), -17.0, device=_device())
+                    buffer = storage[5:5 + size].view(shape)
+                    if is_source:
+                        buffer.copy_(map_.extract(full, location))
+                    buffers[location] = buffer
+                    guards.append((storage, size))
+            requests.append(TransferRequest(f'mixed-{index}', plan_transfer(target_map, source_map), sources, targets))
+            checks.append((targets, target_map, full))
+        if get_accelerator().device_name() == 'cuda':
+            stream = get_accelerator().Stream()
+            stream.wait_stream(get_accelerator().current_stream())
+            with get_accelerator().stream(stream):
+                execute_transfers(requests, endpoints, torch.float32, StagingBudget(256))
+        else:
+            execute_transfers(requests, endpoints, torch.float32, StagingBudget(256))
+        # The return contract makes targets ready even after leaving the caller's stream context.
+        for targets, target_map, full in checks:
+            _assert_matches(targets, target_map, full)
+        for storage, size in guards:
+            assert torch.all(storage[:5] == -17).item()
+            assert torch.all(storage[5 + size:] == -17).item()
+
     def test_many_small_tensors_share_peer_messages(self):
         _join_transfer_group()
         source, target = _row_to_column(self.world_size)
@@ -593,7 +636,8 @@ class TestB2GateCPU:
         harness = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(harness)
         sources = ('deepspeed/checkpoint/affine_transfer.py', 'deepspeed/checkpoint/affine_transfer_executor.py',
-                   'deepspeed/checkpoint/autoep_transfer.py', 'tests/distributed/checkpoint/affine_handoff_h100.py')
+                   'deepspeed/checkpoint/autoep_transfer.py', 'tests/distributed/checkpoint/affine_handoff_h100.py',
+                   'deepspeed/comm/comm.py', 'deepspeed/comm/torch.py')
         manifest = {
             'world_size': 8,
             'scope': 'cross-node',
