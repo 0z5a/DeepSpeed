@@ -1,0 +1,658 @@
+{
+  "status": "PASS",
+  "h100_count": 8,
+  "node_count": 2,
+  "science_records": 304,
+  "dtypes": [
+    "bf16",
+    "fp32"
+  ],
+  "cases_per_rank_per_dtype": 19,
+  "source_base_commit": "cfc94063d05eabc09ba024fe47dc57253677a4ed",
+  "source_overlay_sha256": {
+    "deepspeed/checkpoint/affine_transfer_executor.py": "3ac5af08cf07c98abee8450c68be87859ef96106b4940a831f6579775b48955c",
+    "tests/unit/checkpoint/test_affine_transfer_executor.py": "5a94314e074ee9976369d75fc61b222aaf866be4e58f57c7ddd0f4bcad564f34",
+    "docs/code-docs/source/autoep.rst": "8f5bdc1bd9d331803a99b73d0f4bc83915a7284632752df481a09af25a440f16"
+  },
+  "scope": "Eight-GPU cross-node affine handoff and AutoEPMoELayer correctness; no full model, training restart, or performance claim.",
+  "independent_evidence_audit": {
+    "status": "PASS",
+    "audit_scope": "Independent evidence reader; no scientific producer imported",
+    "h100_gpus": 8,
+    "nodes": 2,
+    "verified_source_files": 635,
+    "dtypes": {
+      "bf16": {
+        "status": "PASS",
+        "records": 152,
+        "rank_journals": 8,
+        "worker_natural_exits": 8,
+        "full_cases_per_rank": 19,
+        "consumer_generations_per_case": 3,
+        "eight_distinct_physical_gpus_on_two_nodes": true
+      },
+      "fp32": {
+        "status": "PASS",
+        "records": 152,
+        "rank_journals": 8,
+        "worker_natural_exits": 8,
+        "full_cases_per_rank": 19,
+        "consumer_generations_per_case": 3,
+        "eight_distinct_physical_gpus_on_two_nodes": true
+      }
+    },
+    "whole_model_or_performance_claim": false,
+    "science_records": 304,
+    "shared_plan_peer_budgets": [
+      1024,
+      32,
+      16
+    ],
+    "shared_plan_budget_provenance": "Frozen executed unit source AST, checked by each successful rank source digest.",
+    "mixed_region_records": 8,
+    "shared_plan_rank_checks": 8,
+    "worker_natural_exits_total": 24,
+    "finished": 1791736079.4900575
+  },
+  "python_source_inventory": {
+    "files": 635,
+    "canonical_sha256": "e386f5b094cc24873f13227fe5c0c9eded00f0f542414320e8daa233d5dcfe1f"
+  },
+  "source_sha256": {
+    "deepspeed/checkpoint/affine_transfer.py": "15c1bfb525a906aa47e984e9a6b36af334d06fa45ba9917fbf34b674eeb07271",
+    "deepspeed/checkpoint/affine_transfer_executor.py": "3ac5af08cf07c98abee8450c68be87859ef96106b4940a831f6579775b48955c",
+    "deepspeed/checkpoint/autoep_transfer.py": "6ffa5ae920b15fc7812cc54be85b772d22ea8b74715ee37350b6dec36a4c6651",
+    "tests/distributed/checkpoint/affine_handoff_h100.py": "60e31b98ada90adbcfd6d87201d7000949f9066a19a2fed0661ca208ff0f054d",
+    "deepspeed/comm/comm.py": "e0cbc6406deea4cf3a742da1e7610ed1654178d9a507e27f2c0b7d3461f22d83",
+    "deepspeed/comm/torch.py": "e228c228c7d4152b6dfd149c8a2e8c57b02a746e3362c1c2308b2998a1c0b4c5"
+  },
+  "science": {
+    "bf16": {
+      "status": "PASS",
+      "records": 152,
+      "torch": "2.12.1+cu130",
+      "cuda": "13.0",
+      "nccl": [
+        2,
+        29,
+        7
+      ],
+      "control_backend": "cpu:gloo,cuda:nccl",
+      "peer_bytes": 8388608,
+      "cases": [
+        {
+          "case": "U1",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U2",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U3",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U4",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U5",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U6/missing_source",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/missing_target",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/dtype",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/budget",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/key_order",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/malformed_stride",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/target_alias",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/adapter_error",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            17,
+            29
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17,
+            1
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            5,
+            7,
+            3
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            4,
+            4096,
+            4096
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241,
+            239,
+            233
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U8/disjoint",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 12,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_l2": 0.0,
+          "tolerances": {
+            "rtol": 0.01,
+            "atol": 0.0001,
+            "relative_l2_limit": 0.01
+          }
+        },
+        {
+          "case": "U8/resize",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 24,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_l2": 0.0,
+          "tolerances": {
+            "rtol": 0.01,
+            "atol": 0.0001,
+            "relative_l2_limit": 0.01
+          }
+        }
+      ]
+    },
+    "fp32": {
+      "status": "PASS",
+      "records": 152,
+      "torch": "2.12.1+cu130",
+      "cuda": "13.0",
+      "nccl": [
+        2,
+        29,
+        7
+      ],
+      "control_backend": "cpu:gloo,cuda:nccl",
+      "peer_bytes": 8388608,
+      "cases": [
+        {
+          "case": "U1",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U2",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U3",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U4",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U5",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U6/missing_source",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/missing_target",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/dtype",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/budget",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/key_order",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/malformed_stride",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/target_alias",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/adapter_error",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            17,
+            29
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17,
+            1
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            5,
+            7,
+            3
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            4,
+            4096,
+            4096
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241,
+            239,
+            233
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U8/disjoint",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 12,
+          "maximum_absolute_error": 8.940696716308594e-08,
+          "maximum_relative_l2": 2.3683748777915012e-07,
+          "tolerances": {
+            "rtol": 1e-05,
+            "atol": 1e-06,
+            "relative_l2_limit": 1e-05
+          }
+        },
+        {
+          "case": "U8/resize",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 24,
+          "maximum_absolute_error": 8.940696716308594e-08,
+          "maximum_relative_l2": 2.3683748777915012e-07,
+          "tolerances": {
+            "rtol": 1e-05,
+            "atol": 1e-06,
+            "relative_l2_limit": 1e-05
+          }
+        }
+      ]
+    }
+  },
+  "cpu_regression_tests": {
+    "passed": 50,
+    "status": "PASS",
+    "scope": "Fresh 50-test CPU qualification for the exact executor and unit source used by this GPU run.",
+    "source_sha256": {
+      "deepspeed/checkpoint/affine_transfer_executor.py": "3ac5af08cf07c98abee8450c68be87859ef96106b4940a831f6579775b48955c",
+      "tests/unit/checkpoint/test_affine_transfer_executor.py": "5a94314e074ee9976369d75fc61b222aaf866be4e58f57c7ddd0f4bcad564f34",
+      "docs/code-docs/source/autoep.rst": "8f5bdc1bd9d331803a99b73d0f4bc83915a7284632752df481a09af25a440f16"
+    },
+    "raw_archive": {
+      "sha256": "b4c670d9d0e7832fb0bc1df11b053fa0c4d94efba05be9938fc153aa8134d4b8",
+      "entries": 1349,
+      "bytes": 18626267,
+      "MN5_full_reader_pass": true,
+      "VPS_full_reader_pass": true
+    }
+  },
+  "mixed_region_check": {
+    "status": "PASS",
+    "rank_records": 8,
+    "dtype": "fp32",
+    "source_target_axes": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "caller_stream": "separate_cuda",
+    "storage_offset_elements": 5,
+    "guard_elements_total": 12,
+    "peer_bytes": 256,
+    "source_and_target_guards_intact": true,
+    "source_sha256": "5a94314e074ee9976369d75fc61b222aaf866be4e58f57c7ddd0f4bcad564f34"
+  },
+  "shared_plan_batch_check": {
+    "status": "PASS",
+    "rank_records": 8,
+    "different_parameter_payloads": true,
+    "new_budget_rebuild": true,
+    "source_update_between_calls": true,
+    "second_target_revalidated_on_every_rank": true,
+    "prior_gpu4_evidence": "affine_handoff_gpu4_schedule_20261011.json",
+    "peer_budgets": [
+      1024,
+      32,
+      16
+    ],
+    "smallest_budget_rounds": 48,
+    "transport_handle_interval_rounds": 32
+  },
+  "prior_correctness_evidence": "affine_handoff_gpu8_schedule_20261011.json",
+  "reader_repair": {
+    "original_error": "Missing descriptive shared_plan_peer_budgets field",
+    "resolution": "Read budget tuple from executed frozen unit source; original scientific output retained unchanged.",
+    "science_reexecuted": false
+  },
+  "raw_archive": {
+    "sha256": "0924203c9c239912c90171fa5c9e5d6c26326b9430aa6b9e89bfd51c27a4bfc5",
+    "entries": 1605,
+    "bytes": 19026125,
+    "MN5_full_reader_pass": true,
+    "VPS_full_reader_pass": true
+  }
+}

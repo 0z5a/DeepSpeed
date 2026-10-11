@@ -442,8 +442,9 @@ def execute_transfers(requests: Sequence[TransferRequest],
                     pending.append(handle)
                 else:
                     handle.wait()
-        # Bound retained work and still observe every transport error before returning.
-        if (round_index + 1) % 8 == 0 or round_index + 1 == rounds:
+        # Stream ordering already protects arena reuse. Bound retained handles while avoiding
+        # a host polling delay after every small group of rounds; all errors are observed on return.
+        if (round_index + 1) % 32 == 0 or round_index + 1 == rounds:
             for handle in pending:
                 handle.wait()
             pending.clear()

@@ -590,6 +590,15 @@ comparison remains within one process run; no full-model or restart claim is mad
 All eight workers exit normally, and the independent reader verifies
 274880 raw rank timings.
 
+CUDA payloads remain ordered on the caller stream before any staging arena is
+reused. Completed transport handles are drained every 32 rounds and at the end
+of the call, retaining a bounded number of handles while reducing intermediate
+host polling. The staging budget and per-round payload sizes are unchanged.
+Transport errors are still observed before return, and the final caller stream
+synchronization preserves target readiness. The shared-plan regression adds a
+16-byte peer budget that produces 48 rounds with distinct parameter payloads,
+source updates and collective rejection before writes.
+
 Full-model expert updates and concurrent generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

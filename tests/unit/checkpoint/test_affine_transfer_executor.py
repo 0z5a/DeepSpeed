@@ -297,7 +297,8 @@ class TestB2BatchTransfer(DistributedTest):
             requests.append(TransferRequest(str(index), plan, {rank: source}, {target_location: target}))
             checks.append((target, map_.extract(full, target_location)))
         previous_rounds = 0
-        for budget in (1024, 32):
+        # The smallest budget spans 48 rounds, crossing the bounded CUDA work retention interval.
+        for budget in (1024, 32, 16):
             stats = execute_transfers(requests, endpoints, torch.float32, StagingBudget(budget))
             assert stats.rounds > previous_rounds
             assert stats.sent_bytes == stats.received_bytes == 6 * 4 * 8 * 4
