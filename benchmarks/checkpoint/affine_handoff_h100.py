@@ -175,10 +175,13 @@ def percentile(values, q):
     return ordered[min(len(ordered) - 1, math.ceil(q * len(ordered)) - 1)]
 
 
-def paired_iteration_count(pilot_seconds, window_seconds):
+def paired_iteration_count(pilot_seconds, window_seconds, previous_iterations=0):
     if not pilot_seconds or any(not math.isfinite(value) or value <= 0 for value in pilot_seconds):
         raise ValueError('paired pilots must have finite positive completion times')
-    return max(8, math.ceil(window_seconds * 1.10 / min(pilot_seconds)))
+    if (not isinstance(previous_iterations, int) or isinstance(previous_iterations, bool) or previous_iterations < 0):
+        raise ValueError('the previous paired iteration count must be a nonnegative integer')
+    # A transient slow pilot must not reduce a count that already produced complete paired windows.
+    return max(8, previous_iterations, math.ceil(window_seconds * 1.10 / min(pilot_seconds)))
 
 
 def main():
@@ -245,14 +248,16 @@ def main():
     if any(row['free_bytes'] < 0.15 * row['total_bytes'] for row in capacities):
         raise RuntimeError('the combined resident benchmark buffers leave less than 15 percent GPU headroom')
     records = []
+    iterations = 0
     for window in range(args.windows):
         order = list(routes) if window % 2 == 0 else list(reversed(routes))
         pilot_seconds = []
         for name in order:
-            pilot_start = time.perf_counter()
-            routes[name]()
-            pilot_seconds.append(max(harness.gather(time.perf_counter() - pilot_start)))
-        iterations = paired_iteration_count(pilot_seconds, args.window_seconds)
+            for _ in range(3):
+                pilot_start = time.perf_counter()
+                routes[name]()
+                pilot_seconds.append(max(harness.gather(time.perf_counter() - pilot_start)))
+        iterations = paired_iteration_count(pilot_seconds, args.window_seconds, iterations)
         for name in order:
             route = routes[name]
             get_accelerator().reset_peak_memory_stats()
@@ -304,6 +309,8 @@ def main():
             'dtype': args.dtype,
             'devices': identities,
             'synthetic_expert_parameters': True,
+            'pilot_samples_per_route': 3,
+            'paired_iteration_policy': 'nondecreasing count across completed paired windows',
             'consumer_cycle': 'NOT_RUN',
             'expansion_admitted': False,
             'memory_scope':

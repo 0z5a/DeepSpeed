@@ -1,0 +1,573 @@
+{
+  "status": "PASS",
+  "h100_count": 8,
+  "node_count": 2,
+  "science_records": 304,
+  "dtypes": [
+    "bf16",
+    "fp32"
+  ],
+  "cases_per_rank_per_dtype": 19,
+  "source_commit": "1a7981852da6897d538514c920c9f469dd23f022",
+  "scope": "Eight-GPU cross-node affine handoff and AutoEPMoELayer correctness; no full model, training restart, or performance claim.",
+  "independent_evidence_audit": {
+    "status": "PASS",
+    "audit_scope": "Independent evidence reader; no scientific producer imported",
+    "h100_gpus": 8,
+    "nodes": 2,
+    "verified_source_files": 634,
+    "dtypes": {
+      "bf16": {
+        "status": "PASS",
+        "records": 152,
+        "rank_journals": 8,
+        "worker_natural_exits": 8,
+        "full_cases_per_rank": 19,
+        "consumer_generations_per_case": 3,
+        "eight_distinct_physical_gpus_on_two_nodes": true
+      },
+      "fp32": {
+        "status": "PASS",
+        "records": 152,
+        "rank_journals": 8,
+        "worker_natural_exits": 8,
+        "full_cases_per_rank": 19,
+        "consumer_generations_per_case": 3,
+        "eight_distinct_physical_gpus_on_two_nodes": true
+      }
+    },
+    "whole_model_or_performance_claim": false,
+    "science_records": 304,
+    "finished": 1791713218.3202693
+  },
+  "python_source_inventory": {
+    "files": 634,
+    "canonical_sha256": "3b363af27bac992f7ee9aad9daf0954dbc2d9bfedf6b03b0546fe672594ad2cc"
+  },
+  "source_sha256": {
+    "deepspeed/checkpoint/affine_transfer.py": "15c1bfb525a906aa47e984e9a6b36af334d06fa45ba9917fbf34b674eeb07271",
+    "deepspeed/checkpoint/affine_transfer_executor.py": "75e03b5bb7cded571d6b218a330684bf6bb0a6efeae550065fa827c904d7c048",
+    "deepspeed/checkpoint/autoep_transfer.py": "6ffa5ae920b15fc7812cc54be85b772d22ea8b74715ee37350b6dec36a4c6651",
+    "tests/distributed/checkpoint/affine_handoff_h100.py": "60e31b98ada90adbcfd6d87201d7000949f9066a19a2fed0661ca208ff0f054d",
+    "deepspeed/comm/comm.py": "e0cbc6406deea4cf3a742da1e7610ed1654178d9a507e27f2c0b7d3461f22d83",
+    "deepspeed/comm/torch.py": "e228c228c7d4152b6dfd149c8a2e8c57b02a746e3362c1c2308b2998a1c0b4c5"
+  },
+  "science": {
+    "bf16": {
+      "status": "PASS",
+      "records": 152,
+      "torch": "2.12.1+cu130",
+      "cuda": "13.0",
+      "nccl": [
+        2,
+        29,
+        7
+      ],
+      "control_backend": "cpu:gloo,cuda:nccl",
+      "peer_bytes": 8388608,
+      "cases": [
+        {
+          "case": "U1",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U2",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U3",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U4",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U5",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U6/missing_source",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/missing_target",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/dtype",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/budget",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/key_order",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/malformed_stride",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/target_alias",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/adapter_error",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            17,
+            29
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17,
+            1
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            5,
+            7,
+            3
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            4,
+            4096,
+            4096
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241,
+            239,
+            233
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U8/disjoint",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 12,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_l2": 0.0,
+          "tolerances": {
+            "rtol": 0.01,
+            "atol": 0.0001,
+            "relative_l2_limit": 0.01
+          }
+        },
+        {
+          "case": "U8/resize",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 24,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_l2": 0.0,
+          "tolerances": {
+            "rtol": 0.01,
+            "atol": 0.0001,
+            "relative_l2_limit": 0.01
+          }
+        }
+      ]
+    },
+    "fp32": {
+      "status": "PASS",
+      "records": 152,
+      "torch": "2.12.1+cu130",
+      "cuda": "13.0",
+      "nccl": [
+        2,
+        29,
+        7
+      ],
+      "control_backend": "cpu:gloo,cuda:nccl",
+      "peer_bytes": 8388608,
+      "cases": [
+        {
+          "case": "U1",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U2",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U3",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U4",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U5",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U6/missing_source",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/missing_target",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/dtype",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/budget",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/key_order",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/malformed_stride",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/target_alias",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/adapter_error",
+          "status": "PASS",
+          "rank_records": 8,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            17,
+            29
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            16,
+            17,
+            1
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            8,
+            5,
+            7,
+            3
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "status": "PASS",
+          "rank_records": 8,
+          "shape": [
+            4,
+            4096,
+            4096
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241,
+            239,
+            233
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U8/disjoint",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 12,
+          "maximum_absolute_error": 8.940696716308594e-08,
+          "maximum_relative_l2": 2.3683748777915012e-07,
+          "tolerances": {
+            "rtol": 1e-05,
+            "atol": 1e-06,
+            "relative_l2_limit": 1e-05
+          }
+        },
+        {
+          "case": "U8/resize",
+          "status": "PASS",
+          "rank_records": 8,
+          "generations": 3,
+          "consumer_forward_checks": 24,
+          "maximum_absolute_error": 8.940696716308594e-08,
+          "maximum_relative_l2": 2.3683748777915012e-07,
+          "tolerances": {
+            "rtol": 1e-05,
+            "atol": 1e-06,
+            "relative_l2_limit": 1e-05
+          }
+        }
+      ]
+    }
+  }
+}

@@ -487,6 +487,35 @@ and admits no expansion by itself. A single-node prerequisite is not an eight-GP
 cross-node result. Optimizer state, training resumption, live concurrent updates,
 DeepEP compatibility, and serving throughput require separate validation.
 
+The recorded two-node, eight-H100 validation in
+``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_20261011.json``
+passes all 19 expanded U1--U8 cases on every rank in both BF16 and FP32
+(304 rank/case records). A separate evidence reader verifies all 16 rank
+journals, natural worker exits, source hashes, exact transfer markers,
+rejection sentinels, and the three successive AutoEP consumer generations.
+The original BF16/FP32 tolerances and the full ``(4, 4096, 4096)`` U7 case
+are retained. This result qualifies the cross-node correctness gate only.
+
+The synthetic handoff benchmark samples each route three times when choosing
+its shared paired iteration count. That count cannot decrease after completed
+windows, so an unusually slow later pilot cannot shorten an already qualified
+window size. A measured window below the one-minute minimum still fails.
+
+The corresponding synthetic performance record in
+``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_performance_20261011.json``
+uses 1 GiB of BF16 expert weights, 32 parameters, and an 8 MiB per-peer staging
+budget. All five alternating-order pairs completed with both routes meeting the one-minute
+minimum. The median of window p50 latencies is 20.830 ms for
+rebuild/extract and 38.702 ms for the candidate. The geometric mean
+paired p50 speedup is 0.5369x, with a paired-window
+bootstrap 95% interval of [0.5339, 0.5396]: the candidate is
+86.24% slower on this profile. This is a regression,
+not a speedup claim. The interval describes these five windows in one process
+run; it does not measure restart variability or full-model serving performance.
+An earlier attempt failed the minimum-window guard and is preserved separately,
+excluded from these statistics. All eight workers in the final run exited
+normally, and an independent reader recomputed every stored rank timing sample.
+
 Full-model expert updates and concurrent generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -623,16 +623,21 @@ class TestB2GateCPU:
 
 class TestB2TimingCPU:
 
-    def test_delayed_pilot_does_not_shorten_the_other_paired_route(self):
+    @pytest.mark.parametrize('later_pilots', [None, (0.037, 0.5), (0.01, 0.5)])
+    def test_delayed_pilot_does_not_shorten_the_other_paired_route(self, later_pilots):
         root = Path(__file__).resolve().parents[3]
         path = root / 'benchmarks/checkpoint/affine_handoff_h100.py'
         spec = importlib.util.spec_from_file_location('affine_handoff_paired_window_contract', path)
         benchmark = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(benchmark)
-        # A slow pilot on one route must not admit a brief window on the faster route.
         pilots, minimum = (0.02, 0.5), 60
         iterations = benchmark.paired_iteration_count(pilots, minimum)
         assert all(iterations * duration >= minimum for duration in pilots)
+        if later_pilots is not None:
+            # A delayed later pilot must not undo an already completed pair. A faster route must still extend it.
+            later = benchmark.paired_iteration_count(later_pilots, minimum, iterations)
+            assert later >= iterations
+            assert all(later * duration >= minimum for duration in (*pilots, *later_pilots))
 
 
 class TestB2ModelMoveCPU:

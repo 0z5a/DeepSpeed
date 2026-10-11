@@ -1,0 +1,188 @@
+{
+  "status": "PASS",
+  "audit_scope": "Independent recomputation of all stored rank samples and paired-window summaries",
+  "hardware": {
+    "h100_count": 8,
+    "nodes": 2
+  },
+  "profile": {
+    "logical_bytes": 1073741824,
+    "parameters": 32,
+    "shape": [
+      128,
+      512,
+      256
+    ],
+    "peer_bytes": 8388608,
+    "dtype": "bf16"
+  },
+  "pilot_samples_per_route": 3,
+  "paired_iteration_policy": "nondecreasing count across completed paired windows",
+  "paired_windows": 5,
+  "minimum_window_seconds": 60,
+  "window_reports": [
+    {
+      "window": 0,
+      "route": "rebuild_extract",
+      "iterations": 3372,
+      "maximum_rank_wall_seconds": 70.11066617898177,
+      "p50_ms": 20.827408996410668,
+      "p95_ms": 20.905734971165657,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 0,
+      "route": "candidate",
+      "iterations": 3372,
+      "maximum_rank_wall_seconds": 131.00257790699834,
+      "p50_ms": 38.680897501762956,
+      "p95_ms": 42.68971795681864,
+      "maximum_rank_peak_allocated_bytes": 2692748288,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 1,
+      "route": "candidate",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 133.1290022030007,
+      "p50_ms": 38.98002102505416,
+      "p95_ms": 42.703030980192125,
+      "maximum_rank_peak_allocated_bytes": 2692748288,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 1,
+      "route": "rebuild_extract",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 70.41634852800053,
+      "p50_ms": 20.828626991715282,
+      "p95_ms": 20.90372802922502,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 2,
+      "route": "rebuild_extract",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 70.40711414098041,
+      "p50_ms": 20.832883950788528,
+      "p95_ms": 20.904717035591602,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 2,
+      "route": "candidate",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 135.27247465203982,
+      "p50_ms": 39.15641503408551,
+      "p95_ms": 42.93098900234327,
+      "maximum_rank_peak_allocated_bytes": 2692748288,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 3,
+      "route": "candidate",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 132.88096260704333,
+      "p50_ms": 38.70233497582376,
+      "p95_ms": 42.63484402326867,
+      "maximum_rank_peak_allocated_bytes": 2692748288,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 3,
+      "route": "rebuild_extract",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 70.44132773700403,
+      "p50_ms": 20.84309299243614,
+      "p95_ms": 20.922617986798286,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 4,
+      "route": "rebuild_extract",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 70.38617707899539,
+      "p50_ms": 20.83032700465992,
+      "p95_ms": 20.903447992168367,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 4,
+      "route": "candidate",
+      "iterations": 3385,
+      "maximum_rank_wall_seconds": 131.18782477104105,
+      "p50_ms": 38.477804977446795,
+      "p95_ms": 42.45648201322183,
+      "maximum_rank_peak_allocated_bytes": 2692748288,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    }
+  ],
+  "paired_p50_speedup_ratios": [
+    0.5384417203727349,
+    0.5343410917692378,
+    0.5320426788983,
+    0.5385487207801861,
+    0.5413595452461312
+  ],
+  "geometric_mean_paired_p50_speedup": 0.5369364771966164,
+  "paired_window_bootstrap_ci95": [
+    0.5338931354611383,
+    0.5396498486071616
+  ],
+  "candidate_latency_change_percent": 86.24177020363213,
+  "candidate_faster_within_paired_interval": false,
+  "performance_conclusion": "slower than rebuild/extract",
+  "bootstrap_resamples": 20000,
+  "bootstrap_seed": 20261011,
+  "bootstrap_method": "Resample five paired log speedup ratios with replacement; exp(mean); percentile indices 499 and 19499.",
+  "median_of_window_p50_ms": {
+    "rebuild_extract": 20.83032700465992,
+    "candidate": 38.70233497582376
+  },
+  "rank_timing_samples_verified": 270592,
+  "eight_workers_natural_exit_zero": true,
+  "source_files_verified": 635,
+  "timings_jsonl_sha256": "f2e5dc7050a2cad964aa43c447b23a0d6ae3d5b415e019245831cfe81440e7f1",
+  "benchmark_source_sha256": "2f92a365fa91905fd6772d26f31a1b097ac0e2e0626e0280391c787cf1efa0c5",
+  "legacy_published_b2": "NOT_RUN_NO_LEGACY_SOURCE",
+  "full_model_or_serving_cycle": "NOT_RUN",
+  "timing_scope": "Synthetic frozen expert handoff; same-process paired windows with alternating route order. Includes transfer and target readiness. No restart or general full-model interval.",
+  "memory_scope": "process-resident baseline/candidate buffers and PyTorch cache; add whole-GPU telemetry separately",
+  "finished": 1791716110.4042897,
+  "initial_failed_attempt": {
+    "status": "FAILED_SHORT_WINDOW_AND_SCHEDULER_TERMINATION",
+    "scientific_pass": false,
+    "original_srun_exit": 143,
+    "original_node_final_records_missing": [
+      0
+    ],
+    "complete_pairs": 2,
+    "incomplete_windows": 1,
+    "short_window_max_rank_seconds": 36.93070920999162,
+    "excluded_from_final_paired_statistics": true
+  },
+  "source_base_commit": "1a7981852da6897d538514c920c9f469dd23f022",
+  "source_overlay_sha256": {
+    "benchmarks/checkpoint/affine_handoff_h100.py": "2f92a365fa91905fd6772d26f31a1b097ac0e2e0626e0280391c787cf1efa0c5",
+    "tests/unit/checkpoint/test_affine_transfer_executor.py": "fef99e0e364331ba999bd9d0cce36d87f8f9a6ec848abb66607cdc2f6226372b"
+  },
+  "correctness_evidence": "affine_handoff_gpu8_20261011.json",
+  "runtime": {
+    "torch": "2.12.1+cu130",
+    "cuda": "13.0",
+    "nccl": [
+      2,
+      29,
+      7
+    ]
+  },
+  "timing_regression_tests": {
+    "passed": 3,
+    "case": "TestB2TimingCPU::test_delayed_pilot_does_not_shorten_the_other_paired_route"
+  }
+}
