@@ -28,7 +28,7 @@ entire deadlock argument, and it only holds because the digest made every rank c
 rounds. Returns only once every payload it posted has landed, so a caller can read the target buffers
 as soon as it is given control.
 
-Single node, one device per process, synchronous on return. No CUDA graphs, no overlap with compute,
+One device per process, with explicit transport-group rank bindings, synchronous on return. No CUDA graphs, no overlap with compute,
 no custom kernels: those all change the schedule, which is the last thing a first version of a data
 mover should be perturbing.
 """
@@ -36,6 +36,7 @@ mover should be perturbing.
 import sys
 import zlib
 from dataclasses import dataclass
+from itertools import product
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 import torch
@@ -81,9 +82,10 @@ class TransferStats:
 class TransferRequest:
     """One parameter; ``key`` must identify it identically on every process."""
     key: str
-    plan: TransferPlan
+    plan: Optional[TransferPlan]
     source_buffers: Mapping[int, torch.Tensor]
     target_buffers: Mapping[int, torch.Tensor]
+    preflight_error: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -110,54 +112,37 @@ class _Operation:
     _element_size: int = 0
 
 
-def _row_major_strides(shape: Sequence[int]) -> Tuple[int, ...]:
-    strides = [1] * len(shape)
-    for axis in range(len(shape) - 2, -1, -1):
-        strides[axis] = strides[axis + 1] * shape[axis + 1]
-    return tuple(strides)
-
-
-def _chunks_per_segment(segment: TransferSegment, budget: StagingBudget, element_size: int) -> int:
-    """How many pieces one segment becomes, decided by geometry and budget alone.
-
-    Splitting the last axis keeps every chunk addressable by each side's own strides; splitting any
-    other would need strides recomputed, and a chunk that is not a sub-box of its segment is how an
-    executor writes outside the plan. The packed cost is the span the chunk covers, not its element
-    count, because a column block is strided and packing it touches every row it spans.
-    """
-    if not segment.shape:
-        raise AffineTransferExecutionError(f'{segment!r}: a zero-dimensional segment cannot be transferred')
-    last_extent = segment.shape[-1]
-    span = max(segment.source_strides[-2], last_extent) if len(segment.shape) > 1 else last_extent
-    per_chunk = max(1, min(last_extent, budget.bytes_per_peer // max(span * element_size, 1)))
-    return (last_extent + per_chunk - 1) // per_chunk
-
-
-def _chunk_of(segment: TransferSegment, index: int, count: int, budget: StagingBudget,
-              element_size: int) -> TransferSegment:
-    last = len(segment.shape) - 1
-    extent = segment.shape[last]
-    per_chunk = (extent + count - 1) // count
-    low = index * per_chunk
-    length = min(per_chunk, extent - low)
-    shape = segment.shape[:last] + (length, )
-    return TransferSegment(source_rank=segment.source_rank,
-                           source_offset=segment.source_offset + low * segment.source_strides[last],
-                           source_strides=segment.source_strides,
-                           target_rank=segment.target_rank,
-                           target_offset=segment.target_offset + low * segment.target_strides[last],
-                           target_strides=segment.target_strides,
-                           shape=shape)
+def _chunks(segment: TransferSegment, max_elements: int):
+    """Tile a strided rectangle by its packed payload, retaining both address spaces."""
+    tile = [1] * len(segment.shape)
+    remaining = max_elements
+    for axis in range(len(tile) - 1, -1, -1):
+        tile[axis] = min(segment.shape[axis], remaining)
+        remaining //= tile[axis]
+    origins = [range(0, extent, step) for extent, step in zip(segment.shape, tile)]
+    for origin in product(*origins):
+        shape = tuple(min(step, extent - low) for step, extent, low in zip(tile, segment.shape, origin))
+        yield TransferSegment(
+            source_rank=segment.source_rank,
+            source_offset=segment.source_offset + sum(low * stride
+                                                      for low, stride in zip(origin, segment.source_strides)),
+            source_strides=segment.source_strides,
+            target_rank=segment.target_rank,
+            target_offset=segment.target_offset + sum(low * stride
+                                                      for low, stride in zip(origin, segment.target_strides)),
+            target_strides=segment.target_strides,
+            shape=shape)
 
 
 def build_operations(plan: TransferPlan, endpoints: TransferEndpoints, budget: StagingBudget,
                      element_size: int) -> List[_Operation]:
     """The complete schedule, as a list every rank derives identically."""
+    if element_size <= 0 or budget.bytes_per_peer < element_size:
+        raise AffineTransferExecutionError('the staging budget must hold at least one element')
     operations: List[_Operation] = []
     for segment in plan.segments:
-        count = _chunks_per_segment(segment, budget, element_size)
-        for index in range(count):
-            chunk = _chunk_of(segment, index, count, budget, element_size)
+        _validate_segment(segment, len(plan.logical_shape))
+        for index, chunk in enumerate(_chunks(segment, budget.bytes_per_peer // element_size)):
             operation = _Operation(segment=segment,
                                    chunk=index,
                                    chunk_shape=chunk.shape,
@@ -182,7 +167,7 @@ def plan_digest(plan: TransferPlan, endpoints: TransferEndpoints, budget: Stagin
     payload = [(segment.source_rank, segment.target_rank, segment.source_offset, segment.target_offset, segment.shape,
                 segment.source_strides, segment.target_strides) for segment in plan.segments]
     framed = {
-        'schema': 2,
+        'schema': 3,
         'segments': payload,
         'logical_shape': plan.logical_shape,
         'source_endpoints': dict(sorted(endpoints.source.items())),
@@ -193,49 +178,68 @@ def plan_digest(plan: TransferPlan, endpoints: TransferEndpoints, budget: Stagin
     return zlib.crc32(repr(sorted(framed.items(), key=lambda item: item[0])).encode())
 
 
+def _validate_segment(segment: TransferSegment, ndim: int) -> None:
+    if not segment.shape or len(segment.shape) != ndim:
+        raise AffineTransferExecutionError('segment dimensionality does not match its logical shape')
+    for size in segment.shape:
+        if not isinstance(size, int) or isinstance(size, bool) or size <= 0:
+            raise AffineTransferExecutionError('segment extents must be positive integers')
+    for offset, strides in ((segment.source_offset, segment.source_strides), (segment.target_offset,
+                                                                              segment.target_strides)):
+        if not isinstance(offset, int) or isinstance(offset, bool) or offset < 0:
+            raise AffineTransferExecutionError('segment offsets must be non-negative integers')
+        if len(strides) != ndim:
+            raise AffineTransferExecutionError('segment stride dimensionality does not match its shape')
+        for size, stride in zip(segment.shape, strides):
+            if not isinstance(stride, int) or isinstance(stride, bool) or stride < 0 or (size > 1 and stride == 0):
+                raise AffineTransferExecutionError('segment strides must be positive on non-singleton axes')
+
+
 def _validate_buffers(plan: TransferPlan, source_buffers: Mapping[int, torch.Tensor],
                       target_buffers: Mapping[int, torch.Tensor], dtype: torch.dtype, device: torch.device,
-                      endpoints: TransferEndpoints) -> None:
-    for location, buffer in list(source_buffers.items()) + list(target_buffers.items()):
-        if buffer.dtype != dtype:
-            raise AffineTransferExecutionError(f'location {location}: buffer is {buffer.dtype}, plan expects {dtype}')
-        if buffer.device != device:
-            raise AffineTransferExecutionError(
-                f'location {location}: buffer is on {buffer.device}, transport is on {device}')
-    for location in source_buffers:
-        if location not in endpoints.source:
-            raise AffineTransferExecutionError(f'source location {location} has no endpoint binding')
-    for location in target_buffers:
-        if location not in endpoints.target:
-            raise AffineTransferExecutionError(f'target location {location} has no endpoint binding')
-
-    # Storage identity is compared by address range, not by the identity of a storage object: a
-    # fresh wrapper is returned per call, so id() would report no overlap even for one buffer.
-    source_ranges = [_data_range(buffer) for buffer in source_buffers.values()]
-    target_ranges = [_data_range(buffer) for buffer in target_buffers.values()]
-    if any(low_a < high_b and low_b < high_a for low_a, high_a in source_ranges for low_b, high_b in target_ranges):
-        raise AffineTransferExecutionError(
-            'a source and a target share storage; this executor does not order within-storage overlap')
-
-    for segment in plan.segments:
-        source = source_buffers.get(segment.source_rank)
-        target = target_buffers.get(segment.target_rank)
-        for buffer, offset, strides, which in ((source, segment.source_offset, segment.source_strides, 'source'),
-                                               (target, segment.target_offset, segment.target_strides, 'target')):
-            if buffer is None:
-                continue
-            reach = offset
-            for size, stride in zip(segment.shape, strides):
-                if size <= 0:
-                    raise AffineTransferExecutionError(f'{which} of {segment!r}: non-positive extent')
-                if stride < 0:
-                    raise AffineTransferExecutionError(f'{which} of {segment!r}: negative stride')
-                if size > 1:
-                    reach += (size - 1) * stride
-            limit = buffer.numel()
-            if reach >= limit:
+                      endpoints: TransferEndpoints, rank: int) -> None:
+    for which, buffers, bindings in (('source', source_buffers, endpoints.source), ('target', target_buffers,
+                                                                                    endpoints.target)):
+        for location, buffer in buffers.items():
+            if bindings.get(location) != rank:
+                raise AffineTransferExecutionError(f'{which} location {location} is not owned by this process')
+            _flat(location, buffers, dtype)
+            if buffer.device != device:
                 raise AffineTransferExecutionError(
-                    f'{which} of {segment!r} reaches element {reach} of a {limit}-element buffer')
+                    f'{which} location {location}: buffer is on {buffer.device}, transport is on {device}')
+    for segment in plan.segments:
+        _validate_segment(segment, len(plan.logical_shape))
+        for which, location, offset, strides, buffers, bindings in (('source', segment.source_rank,
+                                                                     segment.source_offset, segment.source_strides,
+                                                                     source_buffers, endpoints.source),
+                                                                    ('target', segment.target_rank,
+                                                                     segment.target_offset, segment.target_strides,
+                                                                     target_buffers, endpoints.target)):
+            if location not in bindings:
+                raise AffineTransferExecutionError(f'{which} location {location} has no endpoint binding')
+            if bindings[location] != rank:
+                continue
+            if location not in buffers:
+                raise AffineTransferExecutionError(f'{which} location {location} is owned here but holds no buffer')
+            reach = offset + sum((size - 1) * stride for size, stride in zip(segment.shape, strides))
+            if reach >= buffers[location].numel():
+                raise AffineTransferExecutionError(
+                    f'{which} of {segment!r} reaches element {reach} of a {buffers[location].numel()}-element buffer')
+
+
+def _validate_aliases(requests: Sequence[TransferRequest]) -> None:
+    sources = [
+        _data_range(buffer) for request in requests for buffer in request.source_buffers.values() if buffer.numel()
+    ]
+    targets = [
+        _data_range(buffer) for request in requests for buffer in request.target_buffers.values() if buffer.numel()
+    ]
+    for low, high in targets:
+        if any(low < source_high and source_low < high for source_low, source_high in sources):
+            raise AffineTransferExecutionError('a source and a target overlap within the transfer batch')
+    for index, (low, high) in enumerate(targets):
+        if any(low < other_high and other_low < high for other_low, other_high in targets[:index]):
+            raise AffineTransferExecutionError('two targets overlap within the transfer batch')
 
 
 def execute_transfer(plan: TransferPlan,
@@ -245,138 +249,14 @@ def execute_transfer(plan: TransferPlan,
                      dtype: torch.dtype,
                      budget: StagingBudget = StagingBudget(),
                      group: Optional[object] = None) -> TransferStats:
-    """Run every copy of ``plan`` that this process is one end of; block until all have landed.
+    """Execute one plan with the same preflight and completion contract as a batch.
 
-    ``source_buffers`` and ``target_buffers`` are keyed by the plan's location ranks and need contain
-    only what this process holds -- a location missing here must exist at the process its endpoint
-    binding names. Buffers are never resized or re-laid-out: a shard that is a window into a bigger
-    allocation is addressed by its own storage offset, because making it contiguous would copy the
-    whole shard, which is the cost this module exists to avoid.
+    Bindings use transport-group ranks. Buffers must be packed views on the owning process;
+    their storage offsets are retained. Rejection on any participant precedes all target writes.
+    Transport failures after payload begins may leave partially written targets.
     """
-    import deepspeed.comm as dist
-
-    element_size = torch.tensor(0, dtype=dtype).element_size()
-    if element_size == 0:
-        raise AffineTransferExecutionError(f'{dtype} has no element size')
-
-    if dist.is_initialized():
-        rank = dist.get_rank(group=group)
-        device = torch.device(get_accelerator().current_device_name())
-    else:
-        rank = 0
-        device = torch.device('cpu')
-
-    # A rank that cannot validate the transfer must still reach the exchange below: raising here would
-    # strand every peer in a collective that never completes. The reason is reported where it was
-    # found, and the verdict travels together with the digest.
-    try:
-        _validate_buffers(plan, source_buffers, target_buffers, dtype, device, endpoints)
-        operations = build_operations(plan, endpoints, budget, element_size)
-        rejected = 0
-    except AffineTransferExecutionError as error:
-        print(f'[transfer] rank {rank} rejected the plan: {error}', file=sys.stderr, flush=True)
-        operations = []
-        rejected = 1
-
-    if dist.is_initialized() and dist.get_world_size(group=group) > 1:
-        # A fixed-size integer all_gather, not all_gather_object: the latter pickles its payload and
-        # runs several collectives to move a handful of bytes, which measured as a multi-millisecond
-        # floor under every transfer regardless of its size.
-        digest = plan_digest(plan, endpoints, budget, element_size)
-        local = torch.tensor([digest, rejected], dtype=torch.int64, device=device)
-        seen = [torch.zeros_like(local) for _ in range(dist.get_world_size(group=group))]
-        dist.all_gather(seen, local, group=group)
-        digests = {int(pair[0].item()) for pair in seen}
-        if any(int(pair[1].item()) for pair in seen):
-            raise AffineTransferExecutionError(
-                'a rank rejected the transfer before it began; no data moved. The reason was reported '
-                'by that rank.')
-        if len(digests) != 1:
-            raise AffineTransferExecutionError(
-                f'ranks disagree about the transfer schedule ({sorted(digests)}); refusing to communicate')
-
-    incoming: Dict[int, List[_Operation]] = {}
-    outgoing: Dict[int, List[_Operation]] = {}
-    for operation in operations:
-        if operation.to_process == rank and operation.from_process != rank:
-            incoming.setdefault(operation.from_process, []).append(operation)
-        elif operation.from_process == rank and operation.to_process != rank:
-            outgoing.setdefault(operation.to_process, []).append(operation)
-
-    arenas: Dict[int, torch.Tensor] = {}
-    send_arenas: Dict[int, torch.Tensor] = {}
-    for peer, peer_operations in sorted(incoming.items()):
-        elements = max(operation.elements for operation in peer_operations)
-        if elements * element_size > budget.bytes_per_peer:
-            raise AffineTransferExecutionError(
-                f'peer {peer}: a single staged chunk needs {elements * element_size} bytes over a budget '
-                f'of {budget.bytes_per_peer}')
-        arenas[peer] = torch.empty(elements, dtype=dtype, device=device)
-    for peer, peer_operations in sorted(outgoing.items()):
-        send_arenas[peer] = torch.empty(max(operation.elements for operation in peer_operations),
-                                        dtype=dtype,
-                                        device=device)
-
-    rounds = max((len(peer_operations) for peer_operations in list(incoming.values()) + list(outgoing.values())),
-                 default=0)
-    if not operations:
-        return TransferStats(0, 0, 0, 0, 0, 0)
-
-    sent = received = copied = 0
-
-    for round_index in range(rounds):
-        staged, requests = [], []
-        for peer, peer_operations in sorted(incoming.items()):
-            if round_index >= len(peer_operations):
-                continue
-            operation = peer_operations[round_index]
-            buffer = arenas[peer][:operation.elements]
-            requests.append(('recv', buffer, peer))
-            staged.append((buffer, operation))
-
-        for peer, peer_operations in sorted(outgoing.items()):
-            if round_index >= len(peer_operations):
-                continue
-            operation = peer_operations[round_index]
-            source = _flat(operation.segment.source_rank, source_buffers, dtype)
-            payload = send_arenas[peer][:operation.elements]
-            payload.view(operation.chunk_shape).copy_(
-                _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
-            requests.append(('send', payload, peer))
-            staged.append((payload, operation))
-
-        # One batched stage per round, not one op at a time. On a process group of more than one rank
-        # torch treats an individually posted P2P op as a collective, so a rank's lone irecv would be
-        # matched against the peer's lone irecv and both would wait forever; a batch carries the send
-        # and the receive together, which is what makes "arm receives before sends" actually hold.
-        handles = dist.batch_p2p(requests, group=group)
-        for handle in handles:
-            handle.wait()
-
-        for buffer, operation in staged:
-            if operation.to_process == rank and operation.from_process != rank:
-                target = _flat(operation.segment.target_rank, target_buffers, dtype)
-                _region(target, operation.target_offset, operation.chunk_shape,
-                        operation.segment.target_strides).copy_(buffer.view(operation.chunk_shape))
-                received += operation.payload_bytes
-            elif operation.from_process == rank and operation.to_process != rank:
-                sent += operation.payload_bytes
-
-    for operation in operations:
-        if operation.from_process != rank or operation.to_process != rank:
-            continue
-        source = _flat(operation.segment.source_rank, source_buffers, dtype)
-        target = _flat(operation.segment.target_rank, target_buffers, dtype)
-        _region(target, operation.target_offset, operation.chunk_shape, operation.segment.target_strides).copy_(
-            _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
-        copied += operation.payload_bytes
-
-    return TransferStats(segments=len(plan.segments),
-                         chunks=len(operations),
-                         rounds=rounds,
-                         local_copy_bytes=copied,
-                         sent_bytes=sent,
-                         received_bytes=received)
+    request = TransferRequest('parameter', plan, source_buffers, target_buffers)
+    return execute_transfers([request], endpoints, dtype, budget, group)
 
 
 def _packed_rounds(indexed_operations: Sequence[Tuple[int, _Operation]], max_elements: int):
@@ -390,72 +270,95 @@ def _packed_rounds(indexed_operations: Sequence[Tuple[int, _Operation]], max_ele
     return rounds
 
 
+@torch.no_grad()
 def execute_transfers(requests: Sequence[TransferRequest],
                       endpoints: TransferEndpoints,
                       dtype: torch.dtype,
                       budget: StagingBudget = StagingBudget(),
                       group: Optional[object] = None) -> TransferStats:
-    """Move several parameters with one schedule agreement and packed peer messages."""
+    """Move a frozen parameter batch with collective preflight and bounded peer messages.
+
+    Each direction stages at most ``bytes_per_peer`` per active peer. All requests and staging
+    allocations are checked before payload, including read/write aliases between parameters.
+    The caller stream's final unpack and local copies complete before this function returns.
+    """
     import deepspeed.comm as dist
 
-    rank = dist.get_rank(group=group) if dist.is_initialized() else 0
-    device = torch.device(get_accelerator().current_device_name()) if dist.is_initialized() else torch.device('cpu')
-    element_size = torch.empty((), dtype=dtype).element_size()
-    indexed = []
-    rejected = 0
+    initialized = dist.is_initialized()
+    rank = dist.get_rank(group=group) if initialized else 0
+    world_size = dist.get_world_size(group=group) if initialized else 1
+    device = torch.device(get_accelerator().current_device_name()) if initialized else torch.device('cpu')
+    indexed, local_copies = [], []
+    recv_rounds, send_rounds, recv_arenas, send_arenas = {}, {}, {}, {}
+    digest, rejected = 0, 0
+    error = None
     try:
-        if len({request.key for request in requests}) != len(requests):
-            raise AffineTransferExecutionError('duplicate transfer batch key')
+        element_size = torch.empty((), dtype=dtype).element_size()
+        if (not isinstance(budget.bytes_per_peer, int) or isinstance(budget.bytes_per_peer, bool)
+                or budget.bytes_per_peer < element_size):
+            raise AffineTransferExecutionError('the staging budget must hold at least one element')
+        for bindings in (endpoints.source, endpoints.target):
+            for location, process in bindings.items():
+                if (not isinstance(location, int) or isinstance(location, bool) or location < 0
+                        or not isinstance(process, int) or isinstance(process, bool) or not 0 <= process < world_size):
+                    raise AffineTransferExecutionError('endpoint bindings must name valid transport-group ranks')
+        keys = [request.key for request in requests]
+        if any(not isinstance(key, str) or not key for key in keys) or len(set(keys)) != len(keys):
+            raise AffineTransferExecutionError('transfer batch keys must be distinct non-empty strings')
         for item, request in enumerate(requests):
-            _validate_buffers(request.plan, request.source_buffers, request.target_buffers, dtype, device, endpoints)
+            if request.preflight_error is not None:
+                raise AffineTransferExecutionError(request.preflight_error)
+            if request.plan is None:
+                raise AffineTransferExecutionError('a transfer request has no plan')
+            _validate_buffers(request.plan, request.source_buffers, request.target_buffers, dtype, device, endpoints,
+                              rank)
             indexed.extend(
                 (item, operation) for operation in build_operations(request.plan, endpoints, budget, element_size))
-        max_elements = budget.bytes_per_peer // element_size
-        for item, operation in indexed:
-            if operation.elements > max_elements:
-                raise AffineTransferExecutionError(
-                    f'a staged chunk needs {operation.payload_bytes} bytes over the budget')
-    except AffineTransferExecutionError as error:
-        print(f'[transfer] rank {rank} rejected the batch: {error}', file=sys.stderr, flush=True)
-        indexed = []
-        rejected = 1
-
-    if dist.is_initialized() and dist.get_world_size(group=group) > 1:
-        fingerprint = (str(dtype),
+        _validate_aliases(requests)
+        fingerprint = (3, str(dtype), budget.bytes_per_peer, tuple(sorted(endpoints.source.items())),
+                       tuple(sorted(endpoints.target.items())),
                        tuple((request.key, plan_digest(request.plan, endpoints, budget, element_size))
                              for request in requests))
-        local = torch.tensor([zlib.crc32(repr(fingerprint).encode()), rejected], dtype=torch.int64, device=device)
-        seen = [torch.zeros_like(local) for _ in range(dist.get_world_size(group=group))]
+        digest = zlib.crc32(repr(fingerprint).encode())
+        incoming: Dict[int, List[Tuple[int, _Operation]]] = {}
+        outgoing: Dict[int, List[Tuple[int, _Operation]]] = {}
+        for item, operation in indexed:
+            if operation.from_process == operation.to_process == rank:
+                local_copies.append((item, operation))
+            elif operation.to_process == rank:
+                incoming.setdefault(operation.from_process, []).append((item, operation))
+            elif operation.from_process == rank:
+                outgoing.setdefault(operation.to_process, []).append((item, operation))
+        max_elements = budget.bytes_per_peer // element_size
+        recv_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in incoming.items()}
+        send_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in outgoing.items()}
+        recv_arenas = {
+            peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
+            for peer, rounds in recv_rounds.items()
+        }
+        send_arenas = {
+            peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
+            for peer, rounds in send_rounds.items()
+        }
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OverflowError, MemoryError) as caught:
+        error = caught
+        rejected = 1
+        recv_arenas, send_arenas = {}, {}
+        print(f'[transfer] rank {rank} rejected the batch: {caught}', file=sys.stderr, flush=True)
+
+    # Invalid metadata must not be inspected again while constructing the agreement payload.
+    if world_size > 1:
+        local = torch.tensor([digest, rejected], dtype=torch.int64, device=device)
+        seen = [torch.zeros_like(local) for _ in range(world_size)]
         dist.all_gather(seen, local, group=group)
         if any(int(pair[1].item()) for pair in seen):
-            raise AffineTransferExecutionError('a rank rejected the transfer batch before data moved')
+            raise AffineTransferExecutionError(
+                'a rank rejected the transfer batch before it began; no data moved') from error
         if len({int(pair[0].item()) for pair in seen}) != 1:
-            raise AffineTransferExecutionError('ranks disagree about the transfer batch schedule')
+            raise AffineTransferExecutionError('ranks disagree about the transfer schedule (batch schedule)')
     elif rejected:
-        raise AffineTransferExecutionError('the transfer batch was rejected before data moved')
+        raise AffineTransferExecutionError(f'the transfer batch was rejected before data moved: {error}') from error
 
-    incoming: Dict[int, List[Tuple[int, _Operation]]] = {}
-    outgoing: Dict[int, List[Tuple[int, _Operation]]] = {}
-    local_copies = []
-    for item, operation in indexed:
-        if operation.from_process == operation.to_process == rank:
-            local_copies.append((item, operation))
-        elif operation.to_process == rank:
-            incoming.setdefault(operation.from_process, []).append((item, operation))
-        elif operation.from_process == rank:
-            outgoing.setdefault(operation.to_process, []).append((item, operation))
-
-    max_elements = budget.bytes_per_peer // element_size
-    recv_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in incoming.items()}
-    send_rounds = {peer: _packed_rounds(ops, max_elements) for peer, ops in outgoing.items()}
-    recv_arenas = {
-        peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
-        for peer, rounds in recv_rounds.items()
-    }
-    send_arenas = {
-        peer: torch.empty(max(count for _, count in rounds), dtype=dtype, device=device)
-        for peer, rounds in send_rounds.items()
-    }
     rounds = max((len(value) for value in list(recv_rounds.values()) + list(send_rounds.values())), default=0)
     sent = received = copied = 0
 
@@ -475,8 +378,15 @@ def execute_transfers(requests: Sequence[TransferRequest],
                     _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
                 sent += operation.payload_bytes
             p2p.append(('send', arena[:count], peer))
-        for handle in dist.batch_p2p(p2p, group=group):
-            handle.wait()
+        operations = [
+            dist.P2POp(dist.irecv if direction == 'recv' else dist.isend,
+                       buffer,
+                       dist.get_global_rank(group, peer) if group is not None else peer,
+                       group=group) for direction, buffer, peer in p2p
+        ]
+        if operations:
+            for handle in dist.batch_isend_irecv(operations):
+                handle.wait()
         for peer, peer_rounds in recv_rounds.items():
             if round_index >= len(peer_rounds):
                 continue
@@ -494,6 +404,8 @@ def execute_transfers(requests: Sequence[TransferRequest],
             _region(source, operation.source_offset, operation.chunk_shape, operation.segment.source_strides))
         copied += operation.payload_bytes
 
+    if device.type != 'cpu':
+        get_accelerator().current_stream().synchronize()
     return TransferStats(sum(len(request.plan.segments) for request in requests), len(indexed), rounds, copied, sent,
                          received)
 
@@ -502,8 +414,7 @@ def _data_range(buffer: torch.Tensor) -> Tuple[int, int]:
     """Byte extent a tensor's elements occupy in storage."""
     start = buffer.data_ptr()
     span = buffer.numel() * buffer.element_size()
-    offset = buffer.storage_offset() * buffer.element_size()
-    return start - offset, start - offset + buffer.untyped_storage().nbytes()
+    return start, start + span
 
 
 def _flat(location: int, buffers: Mapping[int, torch.Tensor], dtype: torch.dtype) -> torch.Tensor:
@@ -512,12 +423,11 @@ def _flat(location: int, buffers: Mapping[int, torch.Tensor], dtype: torch.dtype
         buffer = buffers[location]
     except KeyError:
         raise AffineTransferExecutionError(f'location {location} is bound to this process but holds no buffer')
-    flat = buffer.reshape(-1)
-    if flat.stride(0) != 1:
+    if buffer.layout != torch.strided or not buffer.is_contiguous():
         raise AffineTransferExecutionError(f'location {location}: shard is not contiguous in its own storage')
-    if flat.dtype != dtype:
-        raise AffineTransferExecutionError(f'location {location}: {flat.dtype} is not {dtype}')
-    return flat
+    if buffer.dtype != dtype:
+        raise AffineTransferExecutionError(f'location {location}: {buffer.dtype} is not {dtype}')
+    return buffer.view(-1)
 
 
 def _region(flat: torch.Tensor, offset: int, shape: Tuple[int, ...], strides: Tuple[int, ...]) -> torch.Tensor:

@@ -189,11 +189,14 @@ def destroy_process_group(group: Optional[Any] = None) -> None:
     return cdb.destroy_process_group(group=group)
 
 
-def new_group(ranks):
+def new_group(ranks, timeout=None):
+    """Create a group with an optional collective timeout, otherwise using the backend default."""
     global cdb
     assert cdb is not None and cdb.is_initialized(
     ), 'DeepSpeed backend not set, please initialize it using init_process_group()'
-    return cdb.new_group(ranks)
+    if timeout is None:
+        return cdb.new_group(ranks)
+    return cdb.new_group(ranks, timeout=timeout)
 
 
 def is_available() -> bool:

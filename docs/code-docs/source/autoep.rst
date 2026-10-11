@@ -439,3 +439,101 @@ Requirements and limits:
 - DeepSeek-V2 and DeepSeek-V3 AutoEP do not support load-balance expert bias
   yet. The built-in DeepSeek presets disable it by default; explicit non-null
   values fail.
+
+
+Frozen expert-weight handoff
+----------------------------
+
+``deepspeed.checkpoint.autoep_transfer.make_autoep_transfer_request`` lowers the
+persisted ``DS_AUTOEP_UC_META`` placement on actual expert Parameters. Supply the
+same complete source/target metadata and stable parameter key on every transport
+rank, plus only the local Parameters keyed by their EP-local ranks. The caller
+must first freeze the weights and normalize ZeRO/EDP fragments to packed EP
+storage. This API does not infer placement from projection names.
+
+Build the complete request batch before calling
+``affine_transfer_executor.execute_transfers`` with one dtype and explicit
+``TransferEndpoints``. A preparation error is carried in the request's
+``preflight_error`` and rejected collectively before any target write. Mixed
+dtypes, missing owner buffers, non-packed tensors, invalid bounds and overlapping
+source/target or target/target windows are rejected. Separate contiguous windows
+in a shared allocation are permitted.
+
+The executor tiles arbitrary-dimensional strided rectangles by packed element
+count. ``StagingBudget.bytes_per_peer`` bounds staging per peer and direction;
+it does not bound the model, output buffers, transport allocations or the sum
+over all peers. Final unpack and local copies complete on the caller stream
+before return. A transport failure after payload begins can leave partial
+outputs; there is no rollback contract.
+
+The external ``tests/distributed/checkpoint/affine_handoff_h100.py`` driver reads
+torchrun's global/world/local ranks and does not spawn workers. ``--scope
+prerequisite`` accepts two or four H100s; ``--scope cross-node`` requires eight
+distinct H100s on two nodes. Its U1--U8 matrix includes idle ranks, disjoint and
+resized endpoints, collective refusal, N-D/guard cases, and an actual
+``AutoEPMoELayer`` with runtime-produced metadata and immediate forward.
+
+For example, in an already allocated test pool:
+
+.. code-block:: bash
+
+    torchrun --nnodes=2 --nproc-per-node=4 --node-rank="$NODE_RANK" \
+      --master-addr="$MASTER_ADDR" --master-port="$MASTER_PORT" \
+      tests/distributed/checkpoint/affine_handoff_h100.py \
+      --scope cross-node --dtype bf16 --peer-mib 8 --output "$RESULT_DIR"
+
+This correctness driver marks full-model and performance validation as not run,
+and admits no expansion by itself. A single-node prerequisite is not an eight-GPU
+cross-node result. Optimizer state, training resumption, live concurrent updates,
+DeepEP compatibility, and serving throughput require separate validation.
+
+Full-model expert updates and concurrent generation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``tests/distributed/checkpoint/autoep_handoff_e2e_h100.py`` consumes a complete
+frozen Moonlight or Qwen3 MoE checkpoint after the eight-H100 U1--U8 gate. Its
+model manifest pins the model revision, every weight/configuration/tokenizer
+file SHA256, parameter count, MoE layer count and AutoEP preset. Loading uses
+local files and rejects missing, unexpected, quantized or mismatched weights.
+Provide a SHA256-pinned JSONL file with at least 128 distinct request IDs and
+natural-language ``prompt`` strings.
+
+The source and target each run the full model with four expert shards. Three
+successive expert snapshots are delivered into the same target Parameters;
+router, attention, shared experts and all remaining weights stay frozen.
+Concurrent cohorts of 32, 64 and 128 requests execute prefill followed by at
+least 16 cached decode steps. Each target feeds its own greedy output into the
+next cached forward; the source model supplies the fixed token/routing oracle.
+The first target forward follows the completed transfer
+without an intervening global barrier or validation copy. Acceptance checks
+expert weights bitwise, Parameter/storage identity, unchanged non-expert
+weights, logits, every routing choice and every greedy token. This reference
+validates delivery into the full AutoEP consumer; native model equivalence
+remains the responsibility of the model-family integration tests.
+
+For example, append these arguments to the managed eight-worker torchrun launch:
+
+.. code-block:: bash
+
+    tests/distributed/checkpoint/autoep_handoff_e2e_h100.py \
+      --snapshot "$MODEL_SNAPSHOT" --preset qwen3_moe \
+      --model-manifest "$MODEL_MANIFEST" --model-manifest-sha256 "$MODEL_MANIFEST_SHA" \
+      --requests "$REQUEST_TRACE" --requests-sha256 "$REQUEST_TRACE_SHA" \
+      --correctness-dir "$CORRECTNESS_DIR" --scope correctness --output "$RESULT_DIR"
+
+``--scope paired-performance`` also requires the published B2 source and its
+immutable SHA256 through ``--legacy-executor`` and ``--legacy-sha256``. It probes
+that baseline using only the current transport-API port; unsupported shapes
+are recorded without an acceleration ratio. The coalesced rebuild/extract and
+candidate paths share the target storage, source snapshot and consumer trace.
+After warmup, at least five paired windows per concurrency each run for at
+least one minute. Measurements include delivery, first token, cached decode,
+per-request completion, paired-window confidence intervals and resident memory.
+The workload must retain 15 percent whole-device headroom after warmup.
+
+These finite cohorts use a fixed decode budget without early EOS termination.
+Their results describe in-process generation and expert updates. Network
+serving, continuous admission/ramp-up, DeepEP visibility and training-state
+restoration require their own application tests. Raw device identities belong
+only in the private evidence bundle; publishing a result does not admit more
+H100s automatically.

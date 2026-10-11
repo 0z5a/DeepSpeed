@@ -528,8 +528,10 @@ class TorchBackend(Backend):
     def get_backend(self, group=None):
         return torch.distributed.get_backend(group=group)
 
-    def new_group(self, ranks):
-        return torch.distributed.new_group(ranks)
+    def new_group(self, ranks, timeout=None):
+        if timeout is None:
+            return torch.distributed.new_group(ranks)
+        return torch.distributed.new_group(ranks, timeout=timeout)
 
     def get_global_rank(self, group, group_rank):
         if hasattr(torch.distributed.distributed_c10d, "get_global_rank"):

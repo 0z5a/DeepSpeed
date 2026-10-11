@@ -1,0 +1,2968 @@
+{
+  "status": "PASS_GPU2",
+  "h100_count": 2,
+  "torch": "2.12.1+cu130",
+  "triton": "3.7.1",
+  "qualifier_rank_receipts": 10,
+  "science_records": 76,
+  "qualifiers": [
+    {
+      "mode": "local-failure",
+      "rank": 0,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": null
+    },
+    {
+      "mode": "local-failure",
+      "rank": 1,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": null
+    },
+    {
+      "mode": "phase-mismatch",
+      "rank": 0,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": null
+    },
+    {
+      "mode": "phase-mismatch",
+      "rank": 1,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": null
+    },
+    {
+      "mode": "oversized",
+      "rank": 0,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": null
+    },
+    {
+      "mode": "oversized",
+      "rank": 1,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": null
+    },
+    {
+      "mode": "nccl-timeout",
+      "rank": 0,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": 121.09633023804054
+    },
+    {
+      "mode": "nccl-timeout",
+      "rank": 1,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": 121.09633023804054
+    },
+    {
+      "mode": "subgroup-timeout",
+      "rank": 0,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": 120.50678481900832
+    },
+    {
+      "mode": "subgroup-timeout",
+      "rank": 1,
+      "status": "EXPECTED_FAILURE_RETURNED",
+      "collective_timeout_seconds": 120,
+      "collective_elapsed_seconds": 120.50678481900832
+    }
+  ],
+  "science": [
+    {
+      "status": "PASS",
+      "record_count": 38,
+      "records": [
+        {
+          "case": "U1",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.1438031480065547,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0029115049983374774,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.48545079404721037,
+          "peak_allocated_bytes": 11776,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U1",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.14261004800209776,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.001729089010041207,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.48541465296875685,
+          "peak_allocated_bytes": 14848,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U2",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.011156854045111686,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0016706130118109286,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10429834201931953,
+          "peak_allocated_bytes": 11776,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U2",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0016544740065000951,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0016214330098591745,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10429793200455606,
+          "peak_allocated_bytes": 14848,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U3",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.003480554965790361,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 576,
+                  "sent_bytes": 512,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.001689542958047241,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 576,
+                  "sent_bytes": 512,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10531289299251512,
+          "peak_allocated_bytes": 14848,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U3",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.00163921999046579,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 512
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.00635630899341777,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 512
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10530341800767928,
+          "peak_allocated_bytes": 11776,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U4",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.002947143977507949,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0017179400310851634,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.11995138402562588,
+          "peak_allocated_bytes": 10240,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U4",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0017608689959160984,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 544,
+                  "sent_bytes": 0,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0018236649921163917,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 544,
+                  "sent_bytes": 0,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.11997184198116884,
+          "peak_allocated_bytes": 16384,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U5",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.030113827029708773,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.001947709999512881,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10252755600959063,
+          "peak_allocated_bytes": 13312,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U5",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.02881793602136895,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0006337730446830392,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10254798299865797,
+          "peak_allocated_bytes": 13312,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_source",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_source",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.023805482021998614,
+          "peak_allocated_bytes": 9728,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_source",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_source",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.030126066994853318,
+          "peak_allocated_bytes": 10752,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_target",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_target",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.037565185979474336,
+          "peak_allocated_bytes": 12288,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_target",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_target",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.03778201201930642,
+          "peak_allocated_bytes": 10752,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/dtype",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "dtype",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.03305667295353487,
+          "peak_allocated_bytes": 12288,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/dtype",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "dtype",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.033313699008431286,
+          "peak_allocated_bytes": 16384,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/budget",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "budget",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.019580963999032974,
+          "peak_allocated_bytes": 17408,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/budget",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "budget",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.019821149995550513,
+          "peak_allocated_bytes": 16384,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/key_order",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "key_order",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.021895124984439462,
+          "peak_allocated_bytes": 17408,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/key_order",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "key_order",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.02212464698823169,
+          "peak_allocated_bytes": 16384,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/malformed_stride",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "malformed_stride",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.031757888034917414,
+          "peak_allocated_bytes": 17408,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/malformed_stride",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "malformed_stride",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.03204093599924818,
+          "peak_allocated_bytes": 16384,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/target_alias",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "target_alias",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.03259589499793947,
+          "peak_allocated_bytes": 11264,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/target_alias",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "target_alias",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.03278697095811367,
+          "peak_allocated_bytes": 16384,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/adapter_error",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "adapter_error",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.012584912998136133,
+          "peak_allocated_bytes": 9728,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/adapter_error",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "adapter_error",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.012775551003869623,
+          "peak_allocated_bytes": 16384,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              17,
+              29
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0761766160139814,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 72,
+                  "rounds": 72,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 7888,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.07527186902007088,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 72,
+                  "rounds": 72,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 7888,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.2529775369912386,
+          "peak_allocated_bytes": 107008,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              17,
+              29
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.08453858899883926,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 72,
+                  "rounds": 72,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 7888
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.07626674498897046,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 72,
+                  "rounds": 72,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 7888
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.25298102595843375,
+          "peak_allocated_bytes": 117248,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17,
+              1
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.02098707400728017,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 6,
+                  "rounds": 6,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.004046136979013681,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 6,
+                  "rounds": 6,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 544,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.0844643340096809,
+          "peak_allocated_bytes": 12288,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17,
+              1
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.007197321974672377,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 6,
+                  "rounds": 6,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.005075490975286812,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 6,
+                  "rounds": 6,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 544
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.08446265995735303,
+          "peak_allocated_bytes": 15360,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              5,
+              7,
+              3
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.015278057951945812,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1680,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.016165027976967394,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1680,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10445144400000572,
+          "peak_allocated_bytes": 25088,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              5,
+              7,
+              3
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.018361810012720525,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1680
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.017674955015536398,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1680
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.10446798702469096,
+          "peak_allocated_bytes": 27136,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              4,
+              4096,
+              4096
+            ],
+            "parameters": 1,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.02029814396519214,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 134217728,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.018753788026515394,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 134217728,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 239,
+                "target_ready_seconds": 0.01939805201254785,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 134217728,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 233,
+                "target_ready_seconds": 0.02242397202644497,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 134217728,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.21450299600837752,
+          "peak_allocated_bytes": 1744830464,
+          "peak_reserved_bytes": 2149580800,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              4,
+              4096,
+              4096
+            ],
+            "parameters": 1,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.018568093015346676,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 134217728
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.01832406601170078,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 134217728
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 239,
+                "target_ready_seconds": 0.01852397801121697,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 134217728
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 233,
+                "target_ready_seconds": 0.018360367976129055,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 134217728
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.2145215289783664,
+          "peak_allocated_bytes": 1879048704,
+          "peak_reserved_bytes": 2149580800,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/disjoint",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.0025697789969854057,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 12288,
+                  "received_bytes": 0
+                }
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.0021757720387540758,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 12288,
+                  "received_bytes": 0
+                }
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.0011986949830316007,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 12288,
+                  "received_bytes": 0
+                }
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 2.7339393320144154,
+          "peak_allocated_bytes": 51200,
+          "peak_reserved_bytes": 2155872256,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/disjoint",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.0019271729979664087,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 12288
+                },
+                "first_forward_seconds": 2.418918634997681,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.002140595985110849,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 12288
+                },
+                "first_forward_seconds": 0.0036445879959501326,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.001907949976157397,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 12288
+                },
+                "first_forward_seconds": 0.0031313099898397923,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 2.733961833990179,
+          "peak_allocated_bytes": 33608704,
+          "peak_reserved_bytes": 2155872256,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/resize",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.0021220469498075545,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 6144,
+                  "sent_bytes": 6144,
+                  "received_bytes": 0
+                },
+                "first_forward_seconds": 0.6391630439902656,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.0021724990219809115,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 6144,
+                  "sent_bytes": 6144,
+                  "received_bytes": 0
+                },
+                "first_forward_seconds": 0.003935480024665594,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.002173967019189149,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 6144,
+                  "sent_bytes": 6144,
+                  "received_bytes": 0
+                },
+                "first_forward_seconds": 0.00365775398677215,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 0.965007547987625,
+          "peak_allocated_bytes": 33614336,
+          "peak_reserved_bytes": 2162163712,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/resize",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.002089199027977884,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 6144
+                },
+                "first_forward_seconds": 0.26712102902820334,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.0023276879801414907,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 6144
+                },
+                "first_forward_seconds": 0.004218145972117782,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.0019611470052041113,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 6144
+                },
+                "first_forward_seconds": 0.0034546409733593464,
+                "tolerances": {
+                  "rtol": 0.01,
+                  "atol": 0.0001,
+                  "relative_l2_limit": 0.01
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 0.9649995439685881,
+          "peak_allocated_bytes": 33612800,
+          "peak_reserved_bytes": 2162163712,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        }
+      ]
+    },
+    {
+      "status": "PASS",
+      "record_count": 38,
+      "records": [
+        {
+          "case": "U1",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.14442276797490194,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 2176,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0006394290248863399,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 2176,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.26291566295549273,
+          "peak_allocated_bytes": 13824,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U1",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.14668144000461325,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 2176
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0017569419578649104,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 2176
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.2629166599945165,
+          "peak_allocated_bytes": 18432,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U2",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0016402520122937858,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 2176,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0005430260207504034,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 2176,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.08055226999567822,
+          "peak_allocated_bytes": 13824,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U2",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0017585420282557607,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 2176
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.001666606985963881,
+                "stats": {
+                  "segments": 2,
+                  "chunks": 2,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 2176
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.08055912499548867,
+          "peak_allocated_bytes": 18432,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U3",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0011580130085349083,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 1152,
+                  "sent_bytes": 1024,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0025027779629454017,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 1152,
+                  "sent_bytes": 1024,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.0778872580267489,
+          "peak_allocated_bytes": 19968,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U3",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0007111570448614657,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1024
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0018361660186201334,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1024
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.07787371601443738,
+          "peak_allocated_bytes": 13824,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U4",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0007728880154900253,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0008191060042008758,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.08732184098334983,
+          "peak_allocated_bytes": 12288,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U4",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.0031731249764561653,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 1088,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.001913700019940734,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 1088,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.08732384501490742,
+          "peak_allocated_bytes": 21504,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U5",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.029691427014768124,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0011676009744405746,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.11204368603648618,
+          "peak_allocated_bytes": 18432,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U5",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17
+            ],
+            "parameters": 2,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.029732554976362735,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0009029579814523458,
+                "stats": {
+                  "segments": 4,
+                  "chunks": 4,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.1120485209976323,
+          "peak_allocated_bytes": 18432,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_source",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_source",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.04591074399650097,
+          "peak_allocated_bytes": 10752,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_source",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_source",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.05191855604061857,
+          "peak_allocated_bytes": 12288,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_target",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_target",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.014943247952032834,
+          "peak_allocated_bytes": 13824,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/missing_target",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "missing_target",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.015167739009484649,
+          "peak_allocated_bytes": 12288,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/dtype",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "dtype",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.0363249370129779,
+          "peak_allocated_bytes": 13824,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/dtype",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "dtype",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.03653461602516472,
+          "peak_allocated_bytes": 19968,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/budget",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "budget",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.020389500015880913,
+          "peak_allocated_bytes": 19456,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/budget",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "budget",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.020621167961508036,
+          "peak_allocated_bytes": 19968,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/key_order",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "key_order",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.01150363200576976,
+          "peak_allocated_bytes": 19456,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/key_order",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "key_order",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.011733956984244287,
+          "peak_allocated_bytes": 19968,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/malformed_stride",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "malformed_stride",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.008435786992777139,
+          "peak_allocated_bytes": 19456,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/malformed_stride",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "malformed_stride",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.00867727299919352,
+          "peak_allocated_bytes": 19968,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/target_alias",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "target_alias",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.014976571954321116,
+          "peak_allocated_bytes": 13312,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/target_alias",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "target_alias",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.015179759007878602,
+          "peak_allocated_bytes": 19968,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/adapter_error",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "fault": "adapter_error",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.018376130959950387,
+          "peak_allocated_bytes": 10752,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U6/adapter_error",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "fault": "adapter_error",
+            "rejected": true,
+            "targets_untouched": true,
+            "guards_intact": true
+          },
+          "wall_seconds": 0.018637285043951124,
+          "peak_allocated_bytes": 19968,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              17,
+              29
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.04977548203896731,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 136,
+                  "rounds": 136,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 15776,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.023997367010451853,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 136,
+                  "rounds": 136,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 15776,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.1450697419932112,
+          "peak_allocated_bytes": 111104,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              17,
+              29
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.05084154300857335,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 136,
+                  "rounds": 136,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 15776
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.024104067008011043,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 136,
+                  "rounds": 136,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 15776
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.14506895700469613,
+          "peak_allocated_bytes": 126976,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17,
+              1
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.006118748045992106,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.005587816995102912,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 1088,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.07522975595202297,
+          "peak_allocated_bytes": 9216,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              16,
+              17,
+              1
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.006139773002360016,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.0067085460177622736,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 16,
+                  "rounds": 16,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 1088
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.07522470300318673,
+          "peak_allocated_bytes": 10752,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              5,
+              7,
+              3
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.007369500992354006,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 40,
+                  "rounds": 40,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 3360,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.01534437300870195,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 40,
+                  "rounds": 40,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 3360,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.08387823402881622,
+          "peak_allocated_bytes": 25088,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              8,
+              5,
+              7,
+              3
+            ],
+            "parameters": 1,
+            "peer_bytes": 128,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.007856255979277194,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 40,
+                  "rounds": 40,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 3360
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.01642983697820455,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 40,
+                  "rounds": 40,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 3360
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.08386331103974953,
+          "peak_allocated_bytes": 28672,
+          "peak_reserved_bytes": 2097152,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              4,
+              4096,
+              4096
+            ],
+            "parameters": 1,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.03887452796334401,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 268435456,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.039172242977656424,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 268435456,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 239,
+                "target_ready_seconds": 0.03909965796628967,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 268435456,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 233,
+                "target_ready_seconds": 0.03882357297698036,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 268435456,
+                  "received_bytes": 0
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.3670884470338933,
+          "peak_allocated_bytes": 1879048192,
+          "peak_reserved_bytes": 2149580800,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "shape": [
+              4,
+              4096,
+              4096
+            ],
+            "parameters": 1,
+            "peer_bytes": 8388608,
+            "trials": [
+              {
+                "modulus": 251,
+                "target_ready_seconds": 0.03892788500525057,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 268435456
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 241,
+                "target_ready_seconds": 0.03943698602961376,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 268435456
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 239,
+                "target_ready_seconds": 0.03886916802730411,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 268435456
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              },
+              {
+                "modulus": 233,
+                "target_ready_seconds": 0.03913659998215735,
+                "stats": {
+                  "segments": 1,
+                  "chunks": 32,
+                  "rounds": 32,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 268435456
+                },
+                "error_elements": 0,
+                "guard_errors": 0
+              }
+            ]
+          },
+          "wall_seconds": 0.36709113203687593,
+          "peak_allocated_bytes": 2147484160,
+          "peak_reserved_bytes": 2686451712,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/disjoint",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.0022811510134488344,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 24576,
+                  "received_bytes": 0
+                }
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.0024264890234917402,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 24576,
+                  "received_bytes": 0
+                }
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.00226241402560845,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 24576,
+                  "received_bytes": 0
+                }
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 0.9949608899769373,
+          "peak_allocated_bytes": 100352,
+          "peak_reserved_bytes": 2155872256,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/disjoint",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.0023173430236056447,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 24576
+                },
+                "first_forward_seconds": 0.6921013880055398,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.0024501580046489835,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 24576
+                },
+                "first_forward_seconds": 0.003904331009835005,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.0021821309928782284,
+                "stats": {
+                  "segments": 3,
+                  "chunks": 3,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 24576
+                },
+                "first_forward_seconds": 0.0034323789877817035,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 0.994965185993351,
+          "peak_allocated_bytes": 33657856,
+          "peak_reserved_bytes": 2692743168,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/resize",
+          "rank": 0,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.0024534669937565923,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 12288,
+                  "sent_bytes": 12288,
+                  "received_bytes": 0
+                },
+                "first_forward_seconds": 0.6495985360234044,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.002317737031262368,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 12288,
+                  "sent_bytes": 12288,
+                  "received_bytes": 0
+                },
+                "first_forward_seconds": 0.00407168798847124,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.0009411750361323357,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 12288,
+                  "sent_bytes": 12288,
+                  "received_bytes": 0
+                },
+                "first_forward_seconds": 0.0033712860313244164,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 0.8973614330170676,
+          "peak_allocated_bytes": 33663488,
+          "peak_reserved_bytes": 2162163712,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        },
+        {
+          "case": "U8/resize",
+          "rank": 1,
+          "status": "PASS",
+          "detail": {
+            "consumer": "AutoEPMoELayer with runtime-produced uniform placement",
+            "generations": [
+              {
+                "generation": 0,
+                "target_ready_seconds": 0.0023536490043625236,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 12288
+                },
+                "first_forward_seconds": 0.2281351420097053,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 1,
+                "target_ready_seconds": 0.0022698239772580564,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 12288
+                },
+                "first_forward_seconds": 0.0040691850008443,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              },
+              {
+                "generation": 2,
+                "target_ready_seconds": 0.0019775970140472054,
+                "stats": {
+                  "segments": 6,
+                  "chunks": 6,
+                  "rounds": 1,
+                  "local_copy_bytes": 0,
+                  "sent_bytes": 0,
+                  "received_bytes": 12288
+                },
+                "first_forward_seconds": 0.003408966993447393,
+                "tolerances": {
+                  "rtol": 1e-05,
+                  "atol": 1e-06,
+                  "relative_l2_limit": 1e-05
+                },
+                "max_abs_error": 0.0,
+                "relative_l2": 0.0
+              }
+            ],
+            "full_model": "NOT_RUN",
+            "gradient_or_training_resume": "NOT_RUN"
+          },
+          "wall_seconds": 0.8973486250033602,
+          "peak_allocated_bytes": 33668096,
+          "peak_reserved_bytes": 2699034624,
+          "memory_scope": "case PyTorch peak with process-resident allocator cache; excludes non-PyTorch allocations"
+        }
+      ]
+    }
+  ],
+  "scope": "two-GPU prerequisites; no eight-GPU/model/end-to-end qualification",
+  "source_sha256": {
+    "tests/distributed/checkpoint/affine_handoff_h100.py": "60e31b98ada90adbcfd6d87201d7000949f9066a19a2fed0661ca208ff0f054d",
+    "deepspeed/comm/comm.py": "e0cbc6406deea4cf3a742da1e7610ed1654178d9a507e27f2c0b7d3461f22d83",
+    "deepspeed/comm/torch.py": "e228c228c7d4152b6dfd149c8a2e8c57b02a746e3362c1c2308b2998a1c0b4c5",
+    "tests/distributed/checkpoint/affine_handoff_failure_protocol.py": "9390e0fc4b89cd8e23309ad034199a5ca7a707c7c943855fd0492993d18e1c7b",
+    "deepspeed/checkpoint/affine_transfer.py": "15c1bfb525a906aa47e984e9a6b36af334d06fa45ba9917fbf34b674eeb07271",
+    "deepspeed/checkpoint/affine_transfer_executor.py": "75e03b5bb7cded571d6b218a330684bf6bb0a6efeae550065fa827c904d7c048",
+    "deepspeed/checkpoint/autoep_transfer.py": "6ffa5ae920b15fc7812cc54be85b772d22ea8b74715ee37350b6dec36a4c6651"
+  }
+}
