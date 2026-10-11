@@ -574,6 +574,22 @@ comparison remains within one process run; no full-model or restart claim is mad
 All eight workers exit normally, and the independent reader verifies
 270528 raw rank timings.
 
+The schedule-reuse eight-GPU rerun in
+``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_schedule_performance_20261011.json``
+uses the same frozen profile and five alternating-order paired windows.
+The median of window p50 latencies is 21.304 ms for
+rebuild/extract and 21.262 ms for the candidate. The geometric
+mean paired p50 speedup is 0.9989x,
+with a paired-window bootstrap 95% interval of [0.9847, 1.0132].
+The paired point estimate puts the candidate 0.11% slower on this profile.
+The interval includes parity.
+Compared with the earlier candidate measurement of 21.406 ms, its
+observed latency reduction is 0.67%. That last comparison is between
+separate runs and has no paired confidence interval. The current baseline
+comparison remains within one process run; no full-model or restart claim is made.
+All eight workers exit normally, and the independent reader verifies
+274880 raw rank timings.
+
 Full-model expert updates and concurrent generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
