@@ -279,6 +279,40 @@ class TestB2Transfer(DistributedTest):
 class TestB2BatchTransfer(DistributedTest):
     world_size = 2
 
+    def test_shared_plan_batch_keeps_distinct_payloads_and_revalidates(self):
+        _join_transfer_group()
+        rank, world = dist.get_rank(), dist.get_world_size()
+        map_ = contiguous_split_map((4 * world, 8), [4] * world, 0)
+        plan = plan_transfer(map_, map_)
+        endpoints = TransferEndpoints({location: location
+                                       for location in range(world)},
+                                      {location: (location + world // 2) % world
+                                       for location in range(world)})
+        target_location = (rank + world // 2) % world
+        requests, checks = [], []
+        for index in range(6):
+            full = _full(4 * world, 8, torch.float32) + index * 32 * world
+            source = map_.extract(full, rank).contiguous()
+            target = torch.full((4, 8), UNWRITTEN, device=_device())
+            requests.append(TransferRequest(str(index), plan, {rank: source}, {target_location: target}))
+            checks.append((target, map_.extract(full, target_location)))
+        previous_rounds = 0
+        for budget in (1024, 32):
+            stats = execute_transfers(requests, endpoints, torch.float32, StagingBudget(budget))
+            assert stats.rounds > previous_rounds
+            assert stats.sent_bytes == stats.received_bytes == 6 * 4 * 8 * 4
+            previous_rounds = stats.rounds
+            for request, (target, expected) in zip(requests, checks):
+                assert torch.equal(target, expected)
+                request.source_buffers[rank].add_(1)
+                expected.add_(1)
+                target.fill_(UNWRITTEN)
+        if rank == 0:
+            requests[1].target_buffers[target_location] = checks[1][0][:1]
+        with pytest.raises(AffineTransferExecutionError, match='rejected the transfer batch'):
+            execute_transfers(requests, endpoints, torch.float32, StagingBudget(1024))
+        assert all(torch.isnan(target).all().item() for target, _ in checks)
+
     def test_mixed_packed_and_strided_regions_preserve_storage_windows(self):
         _join_transfer_group()
         world, rank = dist.get_world_size(), dist.get_rank()
@@ -420,6 +454,34 @@ class TestB2DisjointEndpoints(DistributedTest):
 
 
 class TestB2TransferCPU:
+
+    def test_shared_plan_uses_each_buffer_and_rechecks_each_call(self):
+        map_ = replicated_map((3, 4), 1)
+        plan = plan_transfer(map_, map_)
+        endpoints = TransferEndpoints({0: 0}, {0: 0})
+        sources = [torch.arange(12, dtype=torch.float32).view(3, 4) + i * 100 for i in range(2)]
+        targets = [torch.full((3, 4), -1.0) for _ in sources]
+        requests = [
+            TransferRequest(str(i), plan, {0: source}, {0: target})
+            for i, (source, target) in enumerate(zip(sources, targets))
+        ]
+        for budget, chunks in ((48, 2), (8, 12)):
+            for source, target in zip(sources, targets):
+                source.add_(1)
+                target.fill_(-1)
+            stats = execute_transfers(requests, endpoints, torch.float32, StagingBudget(budget))
+            assert stats.chunks == chunks
+            assert stats.local_copy_bytes == 96
+            for source, target in zip(sources, targets):
+                assert torch.equal(target, source)
+        for target in targets:
+            target.fill_(-1)
+        # Reusing geometry must not reuse a different request's buffer validation.
+        requests[1].target_buffers[0] = targets[1][:1]
+        with pytest.raises(AffineTransferExecutionError):
+            execute_transfers(requests, endpoints, torch.float32, StagingBudget(48))
+        for target in targets:
+            assert torch.equal(target, torch.full((3, 4), -1.0))
 
     @pytest.mark.parametrize('shape', [(3, 7, 11), (13, 17, 1), (2, 5, 7, 3)])
     def test_nd_tiles_fit_a_small_packed_budget_and_preserve_guards(self, shape):

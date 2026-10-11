@@ -114,6 +114,9 @@ class _Operation:
 
 def _chunks(segment: TransferSegment, max_elements: int):
     """Tile a strided rectangle by its packed payload, retaining both address spaces."""
+    if segment.numel <= max_elements:
+        yield segment
+        return
     tile = [1] * len(segment.shape)
     remaining = max_elements
     for axis in range(len(tile) - 1, -1, -1):
@@ -322,6 +325,7 @@ def execute_transfers(requests: Sequence[TransferRequest],
         keys = [request.key for request in requests]
         if any(not isinstance(key, str) or not key for key in keys) or len(set(keys)) != len(keys):
             raise AffineTransferExecutionError('transfer batch keys must be distinct non-empty strings')
+        schedules = {}
         for item, request in enumerate(requests):
             if request.preflight_error is not None:
                 raise AffineTransferExecutionError(request.preflight_error)
@@ -329,13 +333,17 @@ def execute_transfers(requests: Sequence[TransferRequest],
                 raise AffineTransferExecutionError('a transfer request has no plan')
             _validate_buffers(request.plan, request.source_buffers, request.target_buffers, dtype, device, endpoints,
                               rank)
-            indexed.extend(
-                (item, operation) for operation in build_operations(request.plan, endpoints, budget, element_size))
+            # Many parameters share the same plan. Reuse only geometry within this call;
+            # every request still validates its own buffers and participates in the digest.
+            identity = id(request.plan)
+            if identity not in schedules:
+                schedules[identity] = (build_operations(request.plan, endpoints, budget, element_size),
+                                       plan_digest(request.plan, endpoints, budget, element_size))
+            indexed.extend((item, operation) for operation in schedules[identity][0])
         _validate_aliases(requests)
         fingerprint = (3, str(dtype), budget.bytes_per_peer, tuple(sorted(endpoints.source.items())),
                        tuple(sorted(endpoints.target.items())),
-                       tuple((request.key, plan_digest(request.plan, endpoints, budget, element_size))
-                             for request in requests))
+                       tuple((request.key, schedules[id(request.plan)][1]) for request in requests))
         digest = zlib.crc32(repr(fingerprint).encode())
         incoming: Dict[int, List[Tuple[int, _Operation]]] = {}
         outgoing: Dict[int, List[Tuple[int, _Operation]]] = {}

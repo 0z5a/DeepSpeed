@@ -1,0 +1,639 @@
+{
+  "status": "PASS",
+  "h100_count": 4,
+  "node_count": 1,
+  "science_records": 152,
+  "dtypes": [
+    "bf16",
+    "fp32"
+  ],
+  "cases_per_rank_per_dtype": 19,
+  "source_base_commit": "09d47f6b3b55fe3cb4fa030298ad6162dadac85f",
+  "source_overlay_sha256": {
+    "deepspeed/checkpoint/affine_transfer_executor.py": "ce1660f1270baf5687ab1b7b68beba563e5a57e319fe8db6e3eb93c022513580",
+    "tests/unit/checkpoint/test_affine_transfer_executor.py": "02b84d5678f05ff1b434da93a0b6b3ce43a5fa101c416f822b172ac9f868f603",
+    "docs/code-docs/source/autoep.rst": "1484024f83b3e29e46835d020b8c79ab89b511ae62c8fcaf2d1faef9a50472de"
+  },
+  "scope": "Four-GPU single-node affine handoff and AutoEPMoELayer correctness. This is a prerequisite qualification, not a new eight-GPU cross-node gate or performance result.",
+  "independent_evidence_audit": {
+    "status": "PASS",
+    "audit_scope": "Independent evidence reader; no scientific producer imported",
+    "h100_gpus": 4,
+    "nodes": 1,
+    "verified_source_files": 635,
+    "dtypes": {
+      "bf16": {
+        "status": "PASS",
+        "records": 76,
+        "rank_journals": 4,
+        "worker_natural_exits": 4,
+        "full_cases_per_rank": 19,
+        "consumer_generations_per_case": 3,
+        "four_distinct_physical_gpus_on_one_node": true
+      },
+      "fp32": {
+        "status": "PASS",
+        "records": 76,
+        "rank_journals": 4,
+        "worker_natural_exits": 4,
+        "full_cases_per_rank": 19,
+        "consumer_generations_per_case": 3,
+        "four_distinct_physical_gpus_on_one_node": true
+      }
+    },
+    "whole_model_or_performance_claim": false,
+    "science_records": 152,
+    "mixed_region_records": 4,
+    "shared_plan_batch_rank_checks": 4,
+    "worker_natural_exits_total": 12,
+    "cpu_tests": {
+      "passed": 50,
+      "deselected": 15,
+      "changed_files_hooks_exit": 0,
+      "source_sha256": {
+        "deepspeed/checkpoint/affine_transfer_executor.py": "ce1660f1270baf5687ab1b7b68beba563e5a57e319fe8db6e3eb93c022513580",
+        "tests/unit/checkpoint/test_affine_transfer_executor.py": "02b84d5678f05ff1b434da93a0b6b3ce43a5fa101c416f822b172ac9f868f603",
+        "docs/code-docs/source/autoep.rst": "1484024f83b3e29e46835d020b8c79ab89b511ae62c8fcaf2d1faef9a50472de"
+      }
+    },
+    "finished": 1791726401.2487276
+  },
+  "python_source_inventory": {
+    "files": 635,
+    "canonical_sha256": "c120315d64c4731c33dd616793c44a920b5e8d4b15849c4ec9ee771c7a906eae"
+  },
+  "source_sha256": {
+    "deepspeed/checkpoint/affine_transfer.py": "15c1bfb525a906aa47e984e9a6b36af334d06fa45ba9917fbf34b674eeb07271",
+    "deepspeed/checkpoint/affine_transfer_executor.py": "ce1660f1270baf5687ab1b7b68beba563e5a57e319fe8db6e3eb93c022513580",
+    "deepspeed/checkpoint/autoep_transfer.py": "6ffa5ae920b15fc7812cc54be85b772d22ea8b74715ee37350b6dec36a4c6651",
+    "tests/distributed/checkpoint/affine_handoff_h100.py": "60e31b98ada90adbcfd6d87201d7000949f9066a19a2fed0661ca208ff0f054d",
+    "deepspeed/comm/comm.py": "e0cbc6406deea4cf3a742da1e7610ed1654178d9a507e27f2c0b7d3461f22d83",
+    "deepspeed/comm/torch.py": "e228c228c7d4152b6dfd149c8a2e8c57b02a746e3362c1c2308b2998a1c0b4c5"
+  },
+  "science": {
+    "bf16": {
+      "status": "PASS",
+      "records": 76,
+      "torch": "2.12.1+cu130",
+      "cuda": "13.0",
+      "nccl": [
+        2,
+        29,
+        7
+      ],
+      "control_backend": "cpu:gloo,cuda:nccl",
+      "peer_bytes": 8388608,
+      "cases": [
+        {
+          "case": "U1",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U2",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U3",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U4",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U5",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U6/missing_source",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/missing_target",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/dtype",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/budget",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/key_order",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/malformed_stride",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/target_alias",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/adapter_error",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            8,
+            17,
+            29
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17,
+            1
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            8,
+            5,
+            7,
+            3
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            4,
+            4096,
+            4096
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241,
+            239,
+            233
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U8/disjoint",
+          "status": "PASS",
+          "rank_records": 4,
+          "generations": 3,
+          "consumer_forward_checks": 6,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_l2": 0.0,
+          "tolerances": {
+            "rtol": 0.01,
+            "atol": 0.0001,
+            "relative_l2_limit": 0.01
+          }
+        },
+        {
+          "case": "U8/resize",
+          "status": "PASS",
+          "rank_records": 4,
+          "generations": 3,
+          "consumer_forward_checks": 12,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_l2": 0.0,
+          "tolerances": {
+            "rtol": 0.01,
+            "atol": 0.0001,
+            "relative_l2_limit": 0.01
+          }
+        }
+      ]
+    },
+    "fp32": {
+      "status": "PASS",
+      "records": 76,
+      "torch": "2.12.1+cu130",
+      "cuda": "13.0",
+      "nccl": [
+        2,
+        29,
+        7
+      ],
+      "control_backend": "cpu:gloo,cuda:nccl",
+      "peer_bytes": 8388608,
+      "cases": [
+        {
+          "case": "U1",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U2",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U3",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U4",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U5",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17
+          ],
+          "parameters": 2,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U6/missing_source",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/missing_target",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/dtype",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/budget",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/key_order",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/malformed_stride",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/target_alias",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U6/adapter_error",
+          "status": "PASS",
+          "rank_records": 4,
+          "rejected_on_all_ranks": true,
+          "targets_untouched": true,
+          "guards_intact": true
+        },
+        {
+          "case": "U7/(8, 17, 29)",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            8,
+            17,
+            29
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(16, 17, 1)",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            16,
+            17,
+            1
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/(8, 5, 7, 3)",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            8,
+            5,
+            7,
+            3
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U7/last-axis-counterexample",
+          "status": "PASS",
+          "rank_records": 4,
+          "shape": [
+            4,
+            4096,
+            4096
+          ],
+          "parameters": 1,
+          "moduli": [
+            251,
+            241,
+            239,
+            233
+          ],
+          "payload_error_elements": 0,
+          "guard_errors": 0
+        },
+        {
+          "case": "U8/disjoint",
+          "status": "PASS",
+          "rank_records": 4,
+          "generations": 3,
+          "consumer_forward_checks": 6,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_l2": 0.0,
+          "tolerances": {
+            "rtol": 1e-05,
+            "atol": 1e-06,
+            "relative_l2_limit": 1e-05
+          }
+        },
+        {
+          "case": "U8/resize",
+          "status": "PASS",
+          "rank_records": 4,
+          "generations": 3,
+          "consumer_forward_checks": 12,
+          "maximum_absolute_error": 4.470348358154297e-08,
+          "maximum_relative_l2": 2.3296572293478383e-07,
+          "tolerances": {
+            "rtol": 1e-05,
+            "atol": 1e-06,
+            "relative_l2_limit": 1e-05
+          }
+        }
+      ]
+    }
+  },
+  "cpu_regression_tests": {
+    "passed": 50,
+    "status": "PASS"
+  },
+  "mixed_region_check": {
+    "status": "PASS",
+    "rank_records": 4,
+    "dtype": "fp32",
+    "source_target_axes": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "caller_stream": "separate_cuda",
+    "storage_offset_elements": 5,
+    "guard_elements_total": 12,
+    "peer_bytes": 256,
+    "source_and_target_guards_intact": true,
+    "source_sha256": "02b84d5678f05ff1b434da93a0b6b3ce43a5fa101c416f822b172ac9f868f603"
+  },
+  "shared_plan_batch": {
+    "status": "PASS",
+    "rank_records": 4,
+    "parameters": 6,
+    "budgets_bytes_per_peer": [
+      1024,
+      32
+    ],
+    "distinct_parameter_payloads": true,
+    "updated_source_values_between_calls": true,
+    "collective_rejection_after_buffer_change": true,
+    "targets_untouched_on_rejection": true
+  },
+  "current_source_eight_gpu_gate": "NOT_RUN_RESOURCES_OCCUPIED",
+  "current_source_paired_performance": "NOT_RUN",
+  "prior_correctness_evidence": {
+    "file": "affine_handoff_gpu8_contiguous_20261011.json",
+    "source_commit": "09d47f6b3b55fe3cb4fa030298ad6162dadac85f"
+  }
+}

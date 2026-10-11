@@ -517,6 +517,25 @@ are preserved; errors are checked at each bounded drain and the caller stream
 is synchronized before return. Backends without stream blocking retain the
 immediate per-handle wait.
 
+Within one call, requests sharing the same plan object reuse its chunk schedule
+and geometry digest. Each request still checks its own buffers, and every key
+remains in the batch agreement. This reuse ends on return, so later calls
+recompute schedules for their current budget and endpoint bindings. A segment
+that already fits the peer budget keeps its original shape and strides without
+constructing a redundant tile.
+
+The schedule-reuse revision is qualified in
+``tests/distributed/checkpoint/evidence/affine_handoff_gpu4_schedule_20261011.json``
+on four H100s in one node. It passes 152 BF16/FP32 U1--U8 rank records and four
+additional rank records covering mixed storage layouts and shared-plan batches.
+The shared-plan test sends six distinct parameters, changes the peer budget
+from 1024 to 32 bytes between calls, updates source values, and confirms that
+one shortened target buffer causes collective rejection before any target write.
+All twelve workers exit normally, all 50 CPU regressions pass, and an independent
+reader checks the saved records and source hashes. A new eight-GPU gate and
+paired performance measurement have not been run for this revision; the
+eight-GPU results below belong to the preceding implementation at ``09d47f6``.
+
 The contiguous-view and stream-order implementation is qualified separately in
 ``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_contiguous_20261011.json``.
 It repeats all 304 original BF16/FP32 records and adds eight rank records for
