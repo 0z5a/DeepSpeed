@@ -1,0 +1,196 @@
+{
+  "status": "PASS",
+  "audit_scope": "Independent recomputation of all stored rank samples and paired-window summaries",
+  "hardware": {
+    "h100_count": 8,
+    "nodes": 2
+  },
+  "profile": {
+    "logical_bytes": 1073741824,
+    "parameters": 32,
+    "shape": [
+      128,
+      512,
+      256
+    ],
+    "peer_bytes": 8388608,
+    "dtype": "bf16"
+  },
+  "pilot_samples_per_route": 3,
+  "paired_iteration_policy": "nondecreasing count across completed paired windows",
+  "paired_windows": 5,
+  "minimum_window_seconds": 60,
+  "window_reports": [
+    {
+      "window": 0,
+      "route": "rebuild_extract",
+      "iterations": 4140,
+      "maximum_rank_wall_seconds": 86.0664450469776,
+      "p50_ms": 20.84014448337257,
+      "p95_ms": 21.455025009345263,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 0,
+      "route": "candidate",
+      "iterations": 4140,
+      "maximum_rank_wall_seconds": 66.2671789629967,
+      "p50_ms": 16.462130995932966,
+      "p95_ms": 17.452920030336827,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 1,
+      "route": "candidate",
+      "iterations": 4140,
+      "maximum_rank_wall_seconds": 65.77874172799056,
+      "p50_ms": 15.833949524676427,
+      "p95_ms": 17.053469025995582,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 1,
+      "route": "rebuild_extract",
+      "iterations": 4140,
+      "maximum_rank_wall_seconds": 85.96050823602127,
+      "p50_ms": 20.860874006757513,
+      "p95_ms": 21.390518988482654,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 2,
+      "route": "rebuild_extract",
+      "iterations": 4142,
+      "maximum_rank_wall_seconds": 86.02668308804277,
+      "p50_ms": 20.864552032435313,
+      "p95_ms": 21.394307957962155,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 2,
+      "route": "candidate",
+      "iterations": 4142,
+      "maximum_rank_wall_seconds": 66.3229188240366,
+      "p50_ms": 16.407907503889874,
+      "p95_ms": 17.40914798574522,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 3,
+      "route": "candidate",
+      "iterations": 4142,
+      "maximum_rank_wall_seconds": 66.52413087297464,
+      "p50_ms": 16.336323984432966,
+      "p95_ms": 17.320208018645644,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 3,
+      "route": "rebuild_extract",
+      "iterations": 4142,
+      "maximum_rank_wall_seconds": 85.98669993702788,
+      "p50_ms": 20.85106450249441,
+      "p95_ms": 21.378837001975626,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 4,
+      "route": "rebuild_extract",
+      "iterations": 4142,
+      "maximum_rank_wall_seconds": 85.79025704599917,
+      "p50_ms": 20.813695999095216,
+      "p95_ms": 21.34098601527512,
+      "maximum_rank_peak_allocated_bytes": 3758096384,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    },
+    {
+      "window": 4,
+      "route": "candidate",
+      "iterations": 4142,
+      "maximum_rank_wall_seconds": 66.0400623139576,
+      "p50_ms": 15.833615500014275,
+      "p95_ms": 17.424592981114984,
+      "maximum_rank_peak_allocated_bytes": 2684356096,
+      "maximum_rank_peak_reserved_bytes": 3894411264
+    }
+  ],
+  "paired_p50_speedup_ratios": [
+    1.265944517664281,
+    1.317477611902632,
+    1.2716156540673385,
+    1.2763620825813433,
+    1.3145257947609281
+  ],
+  "geometric_mean_paired_p50_speedup": 1.288995370871898,
+  "paired_window_bootstrap_ci95": [
+    1.270290335576214,
+    1.3079758379610973
+  ],
+  "candidate_latency_change_percent": -22.42020238415726,
+  "candidate_faster_within_paired_interval": true,
+  "performance_conclusion": "faster than rebuild/extract",
+  "bootstrap_resamples": 20000,
+  "bootstrap_seed": 20261011,
+  "bootstrap_method": "Resample five paired log speedup ratios with replacement; exp(mean); percentile indices 499 and 19499.",
+  "median_of_window_p50_ms": {
+    "rebuild_extract": 20.85106450249441,
+    "candidate": 16.336323984432966
+  },
+  "rank_timing_samples_verified": 331296,
+  "eight_workers_natural_exit_zero": true,
+  "source_files_verified": 635,
+  "timings_jsonl_sha256": "7e5f2b7f402462d1eb842844ea7d07f487d91839134061ba44565431be8abac2",
+  "benchmark_source_sha256": "2f92a365fa91905fd6772d26f31a1b097ac0e2e0626e0280391c787cf1efa0c5",
+  "legacy_published_b2": "NOT_RUN_NO_LEGACY_SOURCE",
+  "full_model_or_serving_cycle": "NOT_RUN",
+  "timing_scope": "Synthetic frozen expert handoff; same-process alternating-order paired windows. Includes transfer and target readiness. No restart or general full-model interval.",
+  "memory_scope": "process-resident baseline/candidate buffers and PyTorch cache; add whole-GPU telemetry separately",
+  "finished": 1791798838.917952,
+  "source_base_commit": "1f7492f1e9bdd16aa725a1d05f569d80a6140295",
+  "correctness_evidence": "affine_handoff_gpu8_wait32_20261011.json",
+  "runtime": {
+    "torch": "2.12.1+cu130",
+    "cuda": "13.0",
+    "nccl": [
+      2,
+      29,
+      7
+    ]
+  },
+  "executed_source_sha256": {
+    "deepspeed/checkpoint/affine_transfer.py": "15c1bfb525a906aa47e984e9a6b36af334d06fa45ba9917fbf34b674eeb07271",
+    "deepspeed/checkpoint/affine_transfer_executor.py": "3ac5af08cf07c98abee8450c68be87859ef96106b4940a831f6579775b48955c",
+    "deepspeed/checkpoint/autoep_transfer.py": "6ffa5ae920b15fc7812cc54be85b772d22ea8b74715ee37350b6dec36a4c6651",
+    "deepspeed/comm/comm.py": "e0cbc6406deea4cf3a742da1e7610ed1654178d9a507e27f2c0b7d3461f22d83",
+    "deepspeed/comm/torch.py": "e228c228c7d4152b6dfd149c8a2e8c57b02a746e3362c1c2308b2998a1c0b4c5",
+    "tests/distributed/checkpoint/affine_handoff_h100.py": "60e31b98ada90adbcfd6d87201d7000949f9066a19a2fed0661ca208ff0f054d",
+    "tests/unit/checkpoint/test_affine_transfer_executor.py": "5a94314e074ee9976369d75fc61b222aaf866be4e58f57c7ddd0f4bcad564f34"
+  },
+  "python_source_inventory": {
+    "files": 635,
+    "canonical_sha256": "e386f5b094cc24873f13227fe5c0c9eded00f0f542414320e8daa233d5dcfe1f"
+  },
+  "cpu_regression_tests": {
+    "passed": 50,
+    "status": "PASS",
+    "scope": "Reuse the 50-test CPU qualification; executor and unit source digests match this run."
+  },
+  "raw_archive": {
+    "sha256": "de3d16eed0a6c8d436963176dede254bb1a3a8b3241730a395528f2f4d73289c",
+    "entries": 1430,
+    "bytes": 24758237,
+    "MN5_internal_copy": true,
+    "destination_pool": "3",
+    "full_archive_reader_pass": true
+  },
+  "execution_pool": "2",
+  "admission_failures_excluded_from_statistics": true
+}

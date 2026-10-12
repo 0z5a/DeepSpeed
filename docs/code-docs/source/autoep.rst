@@ -599,6 +599,22 @@ synchronization preserves target readiness. The shared-plan regression adds a
 16-byte peer budget that produces 48 rounds with distinct parameter payloads,
 source updates and collective rejection before writes.
 
+The 32-round handle-drain implementation is measured on eight H100s in
+``tests/distributed/checkpoint/evidence/affine_handoff_gpu8_wait32_performance_20261012.json``.
+The frozen profile remains 1 GiB of BF16 expert weights, 32 parameters and an
+8 MiB peer budget. Five alternating-order pairs all reach the 60-second
+minimum window duration. The median of window p50 latencies is
+20.851 ms for rebuild/extract and 16.336 ms for the candidate.
+The geometric mean paired p50 speedup is 1.2890x, with a
+paired-window bootstrap 95% interval of [1.2703, 1.3080]. The paired
+latency point estimate is 22.42% lower; this interval supports an
+improvement on this synthetic profile. All eight workers exit normally,
+and the independent reader recomputes 331296 raw rank timings.
+The 50-test CPU and eight-GPU correctness qualifications apply to the same
+executor and unit source digests. A complete internal archive copy is
+verified on another existing MN5 allocation. No full-model, restart or
+serving-cycle performance is claimed.
+
 Full-model expert updates and concurrent generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
