@@ -182,7 +182,7 @@ def plan_digest(plan: TransferPlan, endpoints: TransferEndpoints, budget: Stagin
 
 
 def _validate_segment(segment: TransferSegment, ndim: int) -> None:
-    if not segment.shape or len(segment.shape) != ndim:
+    if len(segment.shape) != ndim:
         raise AffineTransferExecutionError('segment dimensionality does not match its logical shape')
     for size in segment.shape:
         if not isinstance(size, int) or isinstance(size, bool) or size <= 0:

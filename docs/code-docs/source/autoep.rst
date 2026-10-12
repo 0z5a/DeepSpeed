@@ -665,3 +665,29 @@ serving, continuous admission/ramp-up, DeepEP visibility and training-state
 restoration require their own application tests. Raw device identities belong
 only in the private evidence bundle; publishing a result does not admit more
 H100s automatically.
+
+Executing affine transfers
+-------------------------
+
+A frozen shard can be transferred into an existing packed target without
+reconstructing the full logical tensor. Endpoint mappings use transport-group
+ranks and distinguish source locations from target locations::
+
+    from deepspeed.checkpoint.affine_transfer import plan_transfer
+    from deepspeed.checkpoint.affine_transfer_executor import (
+        StagingBudget, TransferEndpoints, execute_transfer)
+
+    plan = plan_transfer(target_map, source_map)
+    execute_transfer(plan, local_sources, local_targets,
+                     TransferEndpoints(source_bindings, target_bindings),
+                     dtype, StagingBudget(bytes_per_peer=8 << 20))
+
+Use ``execute_transfers`` with uniquely keyed ``TransferRequest`` objects to pack
+multiple parameters into peer messages. Each process supplies only its own
+contiguous buffers; strided plan regions and buffer storage offsets are retained.
+All participants must agree on requests, endpoints, dtype and staging budget.
+Preflight refusal leaves targets untouched. Return guarantees target readiness;
+a transport failure after payload begins can leave partially written targets.
+The budget applies to each peer direction, not total device memory. Weights must
+remain frozen during transfer; optimizer migration and live AutoEP swaps are outside
+this API. Maintenance contact: ``@0z5a``.

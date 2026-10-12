@@ -53,31 +53,14 @@ DTYPES = [torch.float32, torch.float16, torch.bfloat16]
 
 
 def _join_transfer_group():
-    """Create the group this test transfers over, and pin this rank to its own accelerator.
-
-    Called from the test body rather than from a fixture on purpose: DistributedTest runs fixtures in
-    the supervising process, which has no rank, and spawns the body into the ranks -- where the
-    rendezvous variables exist but nothing has been initialized. The repository's own distributed
-    tests never notice, because they build an engine and deepspeed.initialize sets the group in
-    passing; here the group is the thing under test, so it is opened explicitly.
-    """
     if not dist.is_initialized():
-        local_rank = int(os.environ.get('LOCAL_RANK', 0))
-        get_accelerator().set_device(local_rank % max(get_accelerator().device_count(), 1))
-        dist.init_distributed(dist_backend='nccl', init_method='env://')
-    return dist.get_rank(), dist.get_world_size()
+        dist.init_distributed(dist_backend=get_accelerator().communication_backend_name(), init_method='env://')
 
 
 def _device():
-    """Pin each rank to its own accelerator.
-
-    Without this every rank resolves to device 0 and a 'cross-process' transfer silently becomes two
-    kernels on one card, which would pass all of these while proving nothing about the transport.
-    """
-    local_rank = int(os.environ.get('LOCAL_RANK', dist.get_rank() if dist.is_initialized() else 0))
-    device = local_rank % max(get_accelerator().device_count(), 1)
-    get_accelerator().set_device(device)
-    return torch.device('cuda', device)
+    local_rank = int(os.environ.get('LOCAL_RANK', dist.get_rank()))
+    get_accelerator().set_device(local_rank)
+    return torch.device(get_accelerator().current_device_name())
 
 
 def _full(rows, cols, dtype):
@@ -109,6 +92,8 @@ def _row_to_column(world_size, tp_size=2):
     return source, target
 
 
+@pytest.mark.skipif(get_accelerator().device_name() != 'cuda' or get_accelerator().device_count() < 2,
+                    reason='requires two visible CUDA devices before distributed worker launch')
 class TestB2Transfer(DistributedTest):
     world_size = 2
 
@@ -275,7 +260,26 @@ class TestB2Transfer(DistributedTest):
             execute_transfer(plan_transfer(target, source, PlanBudget()), source_buffers, target_buffers, endpoints,
                              dtype, StagingBudget(bytes_per_peer=256))
 
+    @pytest.mark.parametrize('batched', [False, True])
+    def test_scalar_plan_crosses_processes(self, batched):
+        _join_transfer_group()
+        rank = dist.get_rank()
+        map_ = replicated_map((), 1)
+        plan, endpoints = plan_transfer(map_, map_), TransferEndpoints({0: 0}, {0: 1})
+        sources = {0: torch.tensor(3.0, device=_device())} if rank == 0 else {}
+        storage = torch.full((3, ), -9.0, device=_device())
+        targets = {0: storage[1].view(())} if rank == 1 else {}
+        if batched:
+            execute_transfers([TransferRequest('scalar', plan, sources, targets)], endpoints, torch.float32,
+                              StagingBudget(4))
+        else:
+            execute_transfer(plan, sources, targets, endpoints, torch.float32, StagingBudget(4))
+        expected = torch.tensor([-9.0, 3.0 if rank == 1 else -9.0, -9.0], device=_device())
+        assert torch.equal(storage, expected)
 
+
+@pytest.mark.skipif(get_accelerator().device_name() != 'cuda' or get_accelerator().device_count() < 2,
+                    reason='requires two visible CUDA devices before distributed worker launch')
 class TestB2BatchTransfer(DistributedTest):
     world_size = 2
 
@@ -419,6 +423,8 @@ class TestB2BatchTransfer(DistributedTest):
             execute_transfers(requests, endpoints, torch.float32)
 
 
+@pytest.mark.skipif(get_accelerator().device_name() != 'cuda' or get_accelerator().device_count() < 8,
+                    reason='requires eight visible CUDA devices before distributed worker launch')
 class TestB2DisjointEndpoints(DistributedTest):
     """B2-G03: four source ranks and four target ranks with nothing in common.
 
@@ -430,9 +436,6 @@ class TestB2DisjointEndpoints(DistributedTest):
 
     def test_source_and_target_ranks_do_not_overlap(self):
         _join_transfer_group()
-        if get_accelerator().device_count() < self.world_size:
-            pytest.skip(f'needs {self.world_size} visible accelerators, found {get_accelerator().device_count()}')
-
         source, target = _row_to_column(4, tp_size=4)
         dtype = torch.float32
         full = _full(32, 32, dtype)
@@ -623,6 +626,21 @@ class TestB2TransferCPU:
         assert id(target) == identity and target.data_ptr() == pointer
         assert target.requires_grad and target.grad is None
         assert torch.equal(target, source)
+
+    @pytest.mark.parametrize('batched', [False, True])
+    def test_scalar_plan_preserves_storage_offsets_and_guards(self, batched):
+        source_storage = torch.tensor([-7.0, 3.0, -7.0])
+        target_storage = torch.full((3, ), -9.0)
+        source, target = source_storage[1].view(()), target_storage[1].view(())
+        map_ = replicated_map((), 1)
+        plan, endpoints = plan_transfer(map_, map_), TransferEndpoints({0: 0}, {0: 0})
+        if batched:
+            execute_transfers([TransferRequest('scalar', plan, {0: source}, {0: target})], endpoints, torch.float32,
+                              StagingBudget(4))
+        else:
+            execute_transfer(plan, {0: source}, {0: target}, endpoints, torch.float32, StagingBudget(4))
+        assert torch.equal(target_storage, torch.tensor([-9.0, 3.0, -9.0]))
+        assert torch.equal(source_storage, torch.tensor([-7.0, 3.0, -7.0]))
 
 
 class TestB2AutoEPTransferCPU:
